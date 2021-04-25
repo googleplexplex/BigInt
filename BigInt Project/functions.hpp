@@ -12,6 +12,7 @@ using byte = unsigned char;
 
 class notArithmeticTypeException : public exception
 {
+public:
 	notArithmeticTypeException() : exception("Not arithmetic type") {}
 	notArithmeticTypeException(string typeName) : exception((typeName + " is not arithmetic type").c_str()) {}
 };
