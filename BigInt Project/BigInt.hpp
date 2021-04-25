@@ -1,13 +1,11 @@
 #pragma once
 #include <vector>
+#include "functions.hpp"
 using namespace std;
 
-#define GET_BYTE(x, pos) ((byte*)(&(x)))[(pos)]
-#define nop() __asm { nop }
-#define logout cout
+template<typename T>
+T Abs(T num);
 
-using uint = unsigned int;
-using byte = unsigned char;
 
 class BigInt
 {
@@ -16,38 +14,57 @@ public:
 	vector<byte> val;
 	bool nonNegative;
 
+	//totest
 	template <typename startValueType>
-	BigInt(uint size = 16, startValueType value = 0)
+	BigInt(startValueType value, uint size)
 	{
+		if (!is_arithmetic<startValueType> && startValueType != BigInt)
+			throw notArithmeticTypeException("startValueType");
+
 		if (size >= sizeof(value))
 		{
 			this->size = size;
 			val.assign(size, 0);
 			nonNegative = bool(value >= 0);
-			startValueType valueModule = abs(value);
+			startValueType valueModule = Abs(value);
 			memcpy(&(val[0]), &valueModule, sizeof(valueModule));
 		}
 		else
 		{
-			for (int i = sizeof(value) - 1; i >= 0; i--)
+			for (int i = sizeof(value) - 1; true; i--)
 			{
-				if (GET_BYTE(value, i) != NULL)
+				if (GET_BYTE(value, i) != NULL || i == 0)
 				{
 					this->size = i + 1;
 					val.assign(this->size, 0);
 					nonNegative = bool(value >= 0);
-					startValueType valueModule = abs(value);
+					startValueType valueModule = Abs(value);
 					memcpy(&(val[0]), &valueModule, this->size);
 					break;
 				}
 			}
 		}
 	}
-	BigInt(uint size = 16)
+	
+	//totest
+	template <typename startValueType>
+	BigInt(startValueType value = 0)
 	{
-		this->size = size;
-		val.assign(size, 0);
-		nonNegative = true;
+		if (!is_arithmetic<startValueType> && startValueType != BigInt)
+			throw notArithmeticTypeException("startValueType");
+
+		for (int i = sizeof(value) - 1; true; i--)
+		{
+			if (GET_BYTE(value, i) != NULL || i == 0)
+			{
+				this->size = i + 1;
+				val.assign(this->size, 0);
+				nonNegative = bool(value >= 0);
+				startValueType valueModule = Abs(value);
+				memcpy(&(val[0]), &valueModule, this->size);
+				break;
+			}
+		}
 	}
 
 	//Деконструкторы
@@ -61,52 +78,64 @@ public:
 	//Операторы преобразования
 	//(Любой численный тип)
 };
-const BigInt nullBigInt(0u);
+const BigInt nullBigInt(0);
 
 //Операторы
 //Инк/декремент		++v --v v++ v--
 const BigInt& operator++(BigInt& i)
 {
 	logout << "++v called" << endl;
-	return nullBigInt;
+
+	i = i + 1;
+	return i;
 }
 const BigInt& operator--(BigInt& i)
 {
 	logout << "--v called" << endl;
-	return nullBigInt;
+
+	i = i - 1;
+	return i;
 }
 const BigInt operator++(BigInt& i, int)
 {
 	logout << "v++ called" << endl;
-	return nullBigInt;
+
+	BigInt result = i;
+	i = i + 1;
+	return result;
 }
 const BigInt operator--(BigInt& i, int)
 {
 	logout << "v-- called" << endl;
-	return nullBigInt;
+
+	BigInt result = i;
+	i = i - 1;
+	return result;
 }
 //Арифметика		+ - * / %  (op=)
-const BigInt& operator+(const BigInt& i, int j)
+const BigInt& operator+(const BigInt& i, BigInt j)
 {
 	logout << "v+j called" << endl;
+
+
 	return nullBigInt;
 }
-const BigInt operator-(const BigInt& i, int j)
+const BigInt operator-(const BigInt& i, BigInt j)
 {
 	logout << "v-j called" << endl;
 	return nullBigInt;
 }
-const BigInt operator*(const BigInt& i, int j)
+const BigInt operator*(const BigInt& i, BigInt j)
 {
 	logout << "v*j called" << endl;
 	return nullBigInt;
 }
-const BigInt operator/(const BigInt& i, int j)
+const BigInt operator/(const BigInt& i, BigInt j)
 {
 	logout << "v/j called" << endl;
 	return nullBigInt;
 }
-const BigInt operator%(const BigInt& i, int j)
+const BigInt operator%(const BigInt& i, BigInt j)
 {
 	logout << "v%j called" << endl;
 	return nullBigInt;
@@ -199,3 +228,20 @@ const BigInt& BigInt::operator[](const int index)
 
 
 //Дроби
+
+
+
+
+
+
+template<typename T>
+T Abs(T num)
+{
+	if (!is_arithmetic<T> || T != BigInt)
+		throw notArithmeticTypeException("T");
+
+	if (is_unsigned<T> || num >= 0)
+		return num;
+	else //T is signed && num < 0
+		return -num;
+}
