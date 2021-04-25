@@ -3,7 +3,7 @@ using namespace std;
 
 #define GET_BYTE(x, pos) ((byte*)(&(x)))[(pos)]
 #define nop() __asm { nop }
-#define logout cout
+#define log(x) //cout << x << endl;
 
 using uint = unsigned int;
 using byte = unsigned char;

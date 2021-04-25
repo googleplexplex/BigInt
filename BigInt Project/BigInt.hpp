@@ -15,7 +15,6 @@ public:
 public:
 	vector<byte> val;
 
-	//totest
 	template <typename startValueType>
 	BigInt(startValueType value, uint size)
 	{
@@ -47,7 +46,6 @@ public:
 		}
 	}
 	
-	//totest
 	template <typename startValueType>
 	BigInt(startValueType value = 0)
 	{
@@ -122,21 +120,21 @@ public:
 //Инк/декремент		++v --v v++ v--
 const BigInt& operator++(BigInt& i) //totest
 {
-	logout << "++v called" << endl;
+	log("++v called");
 
 	i = i + 1;
 	return i;
 }
 const BigInt& operator--(BigInt& i) //totest
 {
-	logout << "--v called" << endl;
+	log("--v called");
 
 	i = i - 1;
 	return i;
 }
 const BigInt operator++(BigInt& i, int) //totest
 {
-	logout << "v++ called" << endl;
+	log("v++ called");
 
 	BigInt result = i;
 	i = i + 1;
@@ -144,7 +142,7 @@ const BigInt operator++(BigInt& i, int) //totest
 }
 const BigInt operator--(BigInt& i, int) //totest
 {
-	logout << "v-- called" << endl;
+	log("v-- called");
 
 	BigInt result = i;
 	i = i - 1;
@@ -153,7 +151,7 @@ const BigInt operator--(BigInt& i, int) //totest
 //Арифметика		+ - * / %  (op=)
 const BigInt& operator+(const BigInt& f, const BigInt& s) //totest
 {
-	logout << "v+j called" << endl;
+	log("v+j called");
 
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //(-f) + s = s - (-(-f))
@@ -213,7 +211,7 @@ const BigInt& operator+(const BigInt& f, const BigInt& s) //totest
 }
 const BigInt operator-(const BigInt& f, const BigInt& s) //totest
 {
-	logout << "v-j called" << endl;
+	log("v-j called");
 
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //-f - s = -(f + s) = -(-(-f) + s)
@@ -256,86 +254,146 @@ const BigInt operator-(const BigInt& f, const BigInt& s) //totest
 }
 const BigInt operator*(const BigInt& f, const BigInt& s)
 {
-	logout << "v*j called" << endl;
+	log("v*j called");
 	throw exception("still in dev!");
 }
 const BigInt operator/(const BigInt& f, const BigInt& s)
 {
-	logout << "v/j called" << endl;
+	log("v/j called");
 	throw exception("still in dev!");
 }
 const BigInt operator%(const BigInt& f, const BigInt& s)
 {
-	logout << "v%j called" << endl;
+	log("v%j called");
 	throw exception("still in dev!");
 }
 //(op=)
 //Битовые			v&x v<<x v>>x v^x v|x
 const BigInt operator&(const BigInt& i, int j)
 {
-	logout << "v&j called" << endl;
+	log("v&j called");
 	throw exception("still in dev!");
 }
 const BigInt operator^(const BigInt& i, int j)
 {
-	logout << "v^j called" << endl;
+	log("v^j called");
 	throw exception("still in dev!");
 }
 const BigInt operator|(const BigInt& i, int j)
 {
-	logout << "v|j called" << endl;
+	log("v|j called");
 	throw exception("still in dev!");
 }
 const BigInt operator<<(const BigInt& i, int j)
 {
-	logout << "v<<j called" << endl;
+	log("v<<j called");
 	throw exception("still in dev!");
 }
 const BigInt operator>>(const BigInt& i, int j)
 {
-	logout << "v>>j called" << endl;
+	log("v>>j called");
 	throw exception("still in dev!");
 }
 //Логические		v<x v>x v==x v!=x  (op=)
-bool operator<(const BigInt& f, const BigInt& s)
+bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
-	logout << "v<j called" << endl;
-	throw exception("still in dev!");
+	log("f<s called");
+
+	//Валидируем аргументы
+	if (!f.nonNegative && s.nonNegative) //-f < s
+		return true;
+	if (f.nonNegative && !s.nonNegative) //f < -s
+		return false;
+
+	if (f.size < s.size)
+	{
+		for (int i = f.size; i < s.size; i++)
+		{
+			if (s.val[i] != 0)
+				return true;
+		}
+	}
+	else if (f.size > s.size)
+	{
+		for (int i = s.size; i < f.size; i++)
+		{
+			if (f.val[i] != 0)
+				return false;
+		}
+	}
+
+	const BigInt& smallerInt = (f.size >= s.size) ? (s) : (f);
+
+	for (int i = smallerInt.size - 1; i >= 0; i--)
+	{
+		if (f.val[i] != s.val[i])
+		{
+			return f.val[i] < s.val[i];
+		}
+	}
+
+	return false;
 }
-bool operator>(const BigInt& f, const BigInt& s)
+bool operator>(const BigInt& f, const BigInt& s) //dependent
 {
-	logout << "v>j called" << endl;
-	throw exception("still in dev!");
+	log("f>s called");
+
+	return s < f;
 }
-bool operator<=(const BigInt& f, const BigInt& s)
+bool operator<=(const BigInt& f, const BigInt& s) //dependent
 {
-	logout << "v<=j called" << endl;
-	throw exception("still in dev!");
+	log("f<=s called");
+
+	return (f < s || f == s);
 }
-bool operator>=(const BigInt& f, const BigInt& s)
+bool operator>=(const BigInt& f, const BigInt& s) //dependent
 {
-	logout << "v>=j called" << endl;
-	throw exception("still in dev!");
+	log("f>=s called");
+
+	return (f > s || f == s);
 }
-bool operator==(const BigInt& f, const BigInt& s)
+bool operator==(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
-	logout << "v==j called" << endl;
-	throw exception("still in dev!");
+	log("v==j called");
+
+	//Валидируем аргументы
+	if (!f.nonNegative && s.nonNegative) //-f < s
+		return false;
+	if (f.nonNegative && !s.nonNegative) //f < -s
+		return false;
+
+	const BigInt& biggerInt = (f.size >= s.size) ? (f) : (s);
+	const BigInt& smallerInt = (f.size >= s.size) ? (s) : (f);
+
+	for (int i = smallerInt.size; i < biggerInt.size; i++)
+	{
+		if (biggerInt.val[i] != 0)
+			return false;
+	}
+
+	for (int i = smallerInt.size - 1; i >= 0; i--)
+	{
+		if (s.val[i] != f.val[i])
+			return false;
+	}
+
+	return true;
 }
-bool operator!=(const BigInt& f, const BigInt& s)
+bool operator!=(const BigInt& f, const BigInt& s) //dependent
 {
-	logout << "v!=j called" << endl;
-	throw exception("still in dev!");
+	log("v!=j called");
+
+	return !(f == s);
 }
 //(Остальное)		+v -v v=x v[x](разряд x)
-const BigInt operator+(const BigInt& f)
+const BigInt operator+(const BigInt& f) //independent, primitive
 {
-	logout << "+v called" << endl;
+	log("+v called");
 	return f;
 }
-const BigInt operator-(const BigInt& f)
+const BigInt operator-(const BigInt& f) //independent, primitive
 {
-	logout << "-v called" << endl;
+	log("-v called");
 
 	BigInt result = f;
 	result.nonNegative = !result.nonNegative;
@@ -343,12 +401,12 @@ const BigInt operator-(const BigInt& f)
 }
 const BigInt& BigInt::operator=(const BigInt& i)
 {
-	logout << "v=j called" << endl;
+	log("v=j called");
 	throw exception("still in dev!");
 }
 const BigInt& BigInt::operator[](const int index)
 {
-	logout << "v[j] called" << endl;
+	log("v[j] called");
 	throw exception("still in dev!");
 }
 //Неиспользованные	!v &v v&&x v||x v() (v,x) v->x
@@ -375,5 +433,5 @@ T Abs(T num)
 	if (is_unsigned<T>::value || num >= 0)
 		return num;
 	else //T is signed && num < 0
-		return -num;
+		return 0 - num;
 }
