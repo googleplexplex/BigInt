@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include "BigInt.hpp"
 using namespace std;
 
@@ -9,18 +10,19 @@ int main()
 
 	uint errorsCount = 0;
 	uint testsCount = 1000;
+
 	for (uint i = 0; i < testsCount; i++)
 	{
 		for (uint j = 0; j < testsCount; j++)
 		{
 			BigInt b(i);
 			BigInt c(j);
-			bool trueRes = i < j;
-			bool myRes = b < c;
+			unsigned long long int trueRes = i + j;
+			unsigned long long int myRes = b + c;
 
 			if (trueRes != myRes)
 			{
-				cout << "ERROR! (" << i << " < " << j << ") = " << trueRes << ", but code answer wrong" << endl;
+				cout << "ERROR! " << i << " + " << j << " = " << trueRes << ", but code answer wrong (" << myRes << ")" << endl;
 				errorsCount++;
 			}
 			else {

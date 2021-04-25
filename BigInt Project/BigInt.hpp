@@ -74,21 +74,13 @@ public:
 		this->size++;
 		val.emplace_back(byte(0));
 	}
-	/*int size()
-	{
-		return size;
-	}
-	bool nonNegative()
-	{
-		return nonNegative;
-	}*/
 
 	//Внутриклассовые операторы
 	friend const BigInt& operator++(BigInt& i);
 	friend const BigInt& operator--(BigInt& i);
 	friend const BigInt operator++(BigInt& i, int);
 	friend const BigInt operator--(BigInt& i, int);
-	friend const BigInt& operator+(const BigInt& f, const BigInt& s);
+	friend BigInt operator+(const BigInt& f, const BigInt& s);
 	friend const BigInt operator-(const BigInt& f, const BigInt& s);
 	friend const BigInt operator*(const BigInt& f, const BigInt& s);
 	friend const BigInt operator/(const BigInt& f, const BigInt& s);
@@ -106,15 +98,41 @@ public:
 	friend bool operator>=(const BigInt& f, const BigInt& s);
 	friend bool operator==(const BigInt& f, const BigInt& s);
 	friend bool operator!=(const BigInt& f, const BigInt& s);
-	//(Остальное)		+v -v v=x v[x](разряд x)
+	//(Остальное)		+v -v v=x v[x](разряд x)  x<<v x>>v
 	friend const BigInt operator+(const BigInt& i);
 	friend const BigInt operator-(const BigInt& i);
 	const BigInt& operator=(const BigInt& i);
 	const BigInt& operator[](const int index);
+	friend ostream& operator<<(ostream& out, BigInt& point);
+	friend istream& operator>>(istream& in, BigInt& point);
 
 	//Операторы преобразования
+	operator char*()
+	{
+		log("char*(v) called");
+		throw exception("still in dev!");
+	}
+	operator unsigned long long int() //tested 0<=v<=200000
+	{
+		if (nonNegative && size <= sizeof(unsigned long long int))
+		{
+			unsigned long long int result = 0;
+			memcpy(&result, &val[0], size);
+			return result;
+		}
+		else
+			throw exception("still in dev!");
+	}
 	//(Любой численный тип)
 };
+string to_string(BigInt& f) //dependent
+{
+	if (f.nonNegative && f.size <= sizeof(unsigned long long int))
+		return to_string((unsigned long long int)(f));
+	else
+		throw exception("still in dev!");
+	//return string(static_cast<char*>(*this));
+}
 
 //Операторы
 //Инк/декремент		++v --v v++ v--
@@ -122,14 +140,14 @@ const BigInt& operator++(BigInt& i) //totest
 {
 	log("++v called");
 
-	i = i + 1;
+	i = i + BigInt(1);
 	return i;
 }
 const BigInt& operator--(BigInt& i) //totest
 {
 	log("--v called");
 
-	i = i - 1;
+	i = i - BigInt(1);
 	return i;
 }
 const BigInt operator++(BigInt& i, int) //totest
@@ -137,7 +155,7 @@ const BigInt operator++(BigInt& i, int) //totest
 	log("v++ called");
 
 	BigInt result = i;
-	i = i + 1;
+	i = i + BigInt(1);
 	return result;
 }
 const BigInt operator--(BigInt& i, int) //totest
@@ -145,11 +163,11 @@ const BigInt operator--(BigInt& i, int) //totest
 	log("v-- called");
 
 	BigInt result = i;
-	i = i - 1;
+	i = i - BigInt(1);
 	return result;
 }
 //Арифметика		+ - * / %  (op=)
-const BigInt& operator+(const BigInt& f, const BigInt& s) //totest
+BigInt operator+(const BigInt& f, const BigInt& s) //totest
 {
 	log("v+j called");
 
@@ -385,7 +403,7 @@ bool operator!=(const BigInt& f, const BigInt& s) //dependent
 
 	return !(f == s);
 }
-//(Остальное)		+v -v v=x v[x](разряд x)
+//(Остальное)		+v -v v=x v[x](разряд x) x<<v x>>v
 const BigInt operator+(const BigInt& f) //independent, primitive
 {
 	log("+v called");
@@ -408,6 +426,17 @@ const BigInt& BigInt::operator[](const int index)
 {
 	log("v[j] called");
 	throw exception("still in dev!");
+}
+ostream& operator<<(ostream& out, BigInt& f) //dependent, primitive
+{
+	out << to_string(f);
+	return out;
+}
+
+istream& operator>>(istream& in, BigInt& f)
+{
+	throw exception("still in dev!");
+	return in;
 }
 //Неиспользованные	!v &v v&&x v||x v() (v,x) v->x
 
