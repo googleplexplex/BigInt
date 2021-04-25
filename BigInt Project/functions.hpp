@@ -7,6 +7,8 @@ using namespace std;
 
 using uint = unsigned int;
 using byte = unsigned char;
+#define BYTE_MAX UCHAR_MAX
+#define BYTE_MIN UCHAR_MIN
 
 class notArithmeticTypeException : public exception
 {
