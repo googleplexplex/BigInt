@@ -22,7 +22,7 @@ int main()
 
 			if (trueRes != myRes)
 			{
-				cout << "ERROR! " << i << " + " << j << " = " << trueRes << ", but code answer wrong (" << myRes << ")" << endl;
+				cout << "ERROR! " << i << " + " << j << " = " << trueRes << ", but code answer is " << myRes << endl;
 				errorsCount++;
 			}
 			else {

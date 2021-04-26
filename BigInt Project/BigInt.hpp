@@ -15,6 +15,11 @@ public:
 public:
 	vector<byte> val;
 
+	BigInt()
+	{
+		size = 0;
+		nonNegative = true;
+	}
 	template <typename startValueType>
 	BigInt(startValueType value, uint size)
 	{
@@ -167,7 +172,7 @@ const BigInt operator--(BigInt& i, int) //totest
 	return result;
 }
 //Арифметика		+ - * / %  (op=)
-BigInt operator+(const BigInt& f, const BigInt& s) //totest
+BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
 {
 	log("v+j called");
 
@@ -180,7 +185,10 @@ BigInt operator+(const BigInt& f, const BigInt& s) //totest
 		return -((-f) + (-s));
 	//f >= 0, s >= 0
 
-	BigInt result(0, ((f >= s) ? (f.size) : (s.size)) + 1);
+	BigInt result;
+	result.size = ((f >= s) ? (f.size) : (s.size)) + 1;
+	result.val.assign(result.size, 0);
+
 	const BigInt& biggerInt = (f >= s) ? (f) : (s);
 	const BigInt& smallerInt = (f >= s) ? (s) : (f);
 
@@ -197,21 +205,18 @@ BigInt operator+(const BigInt& f, const BigInt& s) //totest
 		if (presentResult > BYTE_MAX)
 		{
 			addOne = true;
-			presentResult -= BYTE_MAX;
+			presentResult -= (BYTE_MAX + 1);
 		}
 
 		result.val[i] = byte(presentResult);
 	}
+
 	int i;
-	for (i = smallerInt.size; i < result.size && addOne; i++) //Переносим единицу от сложения, если такая осталась
+	for (i = smallerInt.size; i < biggerInt.size && addOne; i++) //Переносим единицу от сложения, если такая осталась
 	{
 		short presentResult = biggerInt.val[i] + 1;
 
-		if (addOne)
-		{
-			presentResult++;
-			addOne = false;
-		}
+		addOne = false;
 		if (presentResult > BYTE_MAX)
 		{
 			addOne = true;
@@ -220,9 +225,16 @@ BigInt operator+(const BigInt& f, const BigInt& s) //totest
 
 		result.val[i] = byte(presentResult);
 	}
-	for (i = smallerInt.size; i < result.size; i++) //Копируем оставшуюся часть большего числа в результат
+
+	if (addOne)
 	{
-		result.val[i] = biggerInt.val[i];
+		result.val[result.size - 1] = 1;
+	}
+	else {
+		for (; i < biggerInt.size; i++) //Копируем оставшуюся часть большего числа в результат
+		{
+			result.val[i] = biggerInt.val[i];
+		}
 	}
 
 	return result;
