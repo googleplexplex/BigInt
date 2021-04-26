@@ -9,25 +9,22 @@ int main()
 	BigInt a(0);
 
 	uint errorsCount = 0;
-	uint testsCount = 1000;
+	uint testsCount = 1000000;
 
 	for (int i = 0; i <= testsCount; i++)
 	{
-		for (int j = 0; j <= testsCount; j++)
-		{
-			BigInt b(i);
-			BigInt c(j);
-			long long int trueRes = i - j;
-			long long int myRes = b - c;
+		BigInt b(i);
+		long long int j = i;
+		long long int trueRes = j--;
+		long long int myRes = b--;
 
-			if (trueRes != myRes)
-			{
-				cout << "ERROR! " << i << " - " << j << " = " << trueRes << ", but code answer is " << myRes << endl;
-				errorsCount++;
-			}
-			else {
-				cout << i << " " << j << " ok" << endl;
-			}
+		if (trueRes != myRes)
+		{
+			cout << "ERROR! " << endl;
+			errorsCount++;
+		}
+		else {
+			cout << i << endl;
 		}
 	}
 	cout << testsCount * testsCount - errorsCount << " tests passed" << endl;

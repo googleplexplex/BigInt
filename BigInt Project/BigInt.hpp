@@ -50,6 +50,11 @@ public:
 			}
 		}
 	}
+
+	BigInt(string value)
+	{
+		throw exception("still in dev!");
+	}
 	
 	template <typename startValueType>
 	BigInt(startValueType value = 0)
@@ -81,10 +86,10 @@ public:
 	}
 
 	//Внутриклассовые операторы
-	friend const BigInt& operator++(BigInt& i);
-	friend const BigInt& operator--(BigInt& i);
-	friend const BigInt operator++(BigInt& i, int);
-	friend const BigInt operator--(BigInt& i, int);
+	friend BigInt operator++(BigInt& i);
+	friend BigInt operator--(BigInt& i);
+	friend BigInt operator++(BigInt& i, int);
+	friend BigInt operator--(BigInt& i, int);
 	friend BigInt operator+(const BigInt& f, const BigInt& s);
 	friend BigInt operator-(const BigInt& f, const BigInt& s);
 	friend const BigInt operator*(const BigInt& f, const BigInt& s);
@@ -156,21 +161,21 @@ string to_string(BigInt& f) //dependent
 
 //Операторы
 //Инк/декремент		++v --v v++ v--
-const BigInt& operator++(BigInt& i) //totest
+BigInt operator++(BigInt& i) //dependent, tested 0<=i<=1000000
 {
 	log("++v called");
 
 	i = i + BigInt(1);
 	return i;
 }
-const BigInt& operator--(BigInt& i) //totest
+BigInt operator--(BigInt& i) //dependent, tested 0<=i<=1000000
 {
 	log("--v called");
 
 	i = i - BigInt(1);
 	return i;
 }
-const BigInt operator++(BigInt& i, int) //totest
+BigInt operator++(BigInt& i, int) //dependent, tested 0<=i<=1000000
 {
 	log("v++ called");
 
@@ -178,7 +183,7 @@ const BigInt operator++(BigInt& i, int) //totest
 	i = i + BigInt(1);
 	return result;
 }
-const BigInt operator--(BigInt& i, int) //totest
+BigInt operator--(BigInt& i, int) //dependent, tested 0<=i<=1000000
 {
 	log("v-- called");
 
@@ -424,7 +429,7 @@ bool operator==(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=10
 
 	return true;
 }
-bool operator!=(const BigInt& f, const BigInt& s) //dependent
+bool operator!=(const BigInt& f, const BigInt& s) //dependent, primitive
 {
 	log("v!=j called");
 
@@ -444,10 +449,15 @@ const BigInt operator-(const BigInt& f) //independent, primitive
 	result.nonNegative = !result.nonNegative;
 	return result;
 }
-const BigInt& BigInt::operator=(const BigInt& i)
+const BigInt& BigInt::operator=(const BigInt& i) //independent, primitive, tested 0<=i<=1000000
 {
 	log("v=j called");
-	throw exception("still in dev!");
+
+	this->size = i.size;
+	this->nonNegative = i.nonNegative;
+	this->val = i.val;
+
+	return i;
 }
 const BigInt& BigInt::operator[](const int index)
 {
