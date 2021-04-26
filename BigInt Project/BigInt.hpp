@@ -254,7 +254,7 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 
 	return result;
 }
-BigInt operator-(const BigInt& f, const BigInt& s) //totest
+BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
 {
 	log("v-j called");
 
@@ -279,7 +279,7 @@ BigInt operator-(const BigInt& f, const BigInt& s) //totest
 		if (f.val[i] >= s.val[i])
 			result.val[i] = f.val[i] - s.val[i];
 		else {
-			result.val[i] = BYTE_MAX + f.val[i] - s.val[i];
+			result.val[i] = (short(BYTE_MAX) + 1) + f.val[i] - s.val[i];
 
 			for (int j = i + 1; j < result.size; j++)
 			{
