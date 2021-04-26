@@ -86,7 +86,7 @@ public:
 	friend const BigInt operator++(BigInt& i, int);
 	friend const BigInt operator--(BigInt& i, int);
 	friend BigInt operator+(const BigInt& f, const BigInt& s);
-	friend const BigInt operator-(const BigInt& f, const BigInt& s);
+	friend BigInt operator-(const BigInt& f, const BigInt& s);
 	friend const BigInt operator*(const BigInt& f, const BigInt& s);
 	friend const BigInt operator/(const BigInt& f, const BigInt& s);
 	friend const BigInt operator%(const BigInt& f, const BigInt& s);
@@ -128,12 +128,27 @@ public:
 		else
 			throw exception("still in dev!");
 	}
+	operator long long int() //tested -500000<=v<=500000
+	{
+		if (size <= sizeof(long long int))
+		{
+			long long int result = 0;
+			memcpy(&result, &val[0], size);
+			if (!nonNegative)
+				result *= -1;
+			return result;
+		}
+		else
+			throw exception("still in dev!");
+	}
 	//(Любой численный тип)
 };
 string to_string(BigInt& f) //dependent
 {
 	if (f.nonNegative && f.size <= sizeof(unsigned long long int))
 		return to_string((unsigned long long int)(f));
+	else if(!f.nonNegative && f.size <= sizeof(long long int))
+		return to_string((long long int)(f));
 	else
 		throw exception("still in dev!");
 	//return string(static_cast<char*>(*this));
@@ -239,7 +254,7 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 
 	return result;
 }
-const BigInt operator-(const BigInt& f, const BigInt& s) //totest
+BigInt operator-(const BigInt& f, const BigInt& s) //totest
 {
 	log("v-j called");
 
@@ -259,7 +274,7 @@ const BigInt operator-(const BigInt& f, const BigInt& s) //totest
 	const BigInt& smallerInt = (f >= s) ? (s) : (f);
 	BigInt result = biggerInt;
 
-	for (int i = smallerInt.size; i >= 0; i--)
+	for (int i = smallerInt.size - 1; i >= 0; i--)
 	{
 		if (f.val[i] >= s.val[i])
 			result.val[i] = f.val[i] - s.val[i];
