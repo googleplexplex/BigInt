@@ -373,25 +373,79 @@ BigInt operator%(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 
 }
 //(op=)
 //Битовые			v&x v<<x v>>x v^x v|x
-const BigInt operator&(const BigInt& i, const BigInt& j)
+const BigInt operator&(const BigInt& f, const BigInt& s) //dependent, totest
 {
-	throw exception("still in dev!");
+	int minSize = (f > s) ? (s.size) : (f.size);
+	const BigInt& biggestInt = (f > s) ? (f) : (s);
+	BigInt result(0, biggestInt.size);
+
+	for (int i = 0; i < minSize; i++)
+	{
+		result.val[i] = f.val[i] & s.val[i];
+	}
+	memset(&(result.val[minSize]), BYTE_MIN, biggestInt.size - minSize); // v AND 0 = 0
+
+	return result;
 }
-const BigInt operator^(const BigInt& i, const BigInt& j)
+const BigInt operator^(const BigInt& f, const BigInt& s) //dependent, totest
 {
-	throw exception("still in dev!");
+	int minSize = (f > s) ? (s.size) : (f.size);
+	const BigInt& biggestInt = (f > s) ? (f) : (s);
+	BigInt result(0, biggestInt.size);
+
+	for (int i = 0; i < minSize; i++)
+	{
+		result.val[i] = f.val[i] ^ s.val[i];
+	}
+	for (int i = minSize; i < biggestInt.size; i++)
+	{
+		result.val[i] = biggestInt.val[i] ^ BYTE_MIN;
+	}
+
+	return result;
 }
-const BigInt operator|(const BigInt& i, const BigInt& j)
+const BigInt operator|(const BigInt& f, const BigInt& s) //dependent, totest
 {
-	throw exception("still in dev!");
+	int minSize = (f > s) ? (s.size) : (f.size);
+	const BigInt& biggestInt = (f > s) ? (f) : (s);
+	BigInt result(0, biggestInt.size);
+
+	for (int i = 0; i < minSize; i++)
+	{
+		result.val[i] = f.val[i] | s.val[i];
+	}
+	for (int i = minSize; i < biggestInt.size; i++)
+	{
+		result.val[i] = biggestInt.val[i]; // v OR 0 = v
+	}
+
+	return result;
 }
-const BigInt operator<<(const BigInt& i, const BigInt& j)
+const BigInt operator<<(const BigInt& f, int s) //dependent, totest
 {
-	throw exception("still in dev!");
+	BigInt result(0, f.size);
+	for (int byteI = 0; byteI < f.size - s; byteI++)
+	{
+		for (int bitI = 0; bitI < 8; bitI++)
+		{
+			SET_BIT(result.val[byteI], bitI, GET_BIT(f.val[byteI + s/8], bitI + s%8));
+		}
+	}
+
+	return result;
 }
-const BigInt operator>>(const BigInt& i, const BigInt& j)
+const BigInt operator>>(const BigInt& f, int s) //dependent, totest
 {
-	throw exception("still in dev!");
+	BigInt result(0, f.size);
+	for (int byteI = 0; byteI < f.size - s; byteI++)
+	{
+		for (int bitI = 0; bitI < 8; bitI++)
+		{
+			SET_BIT(result.val[byteI + s / 8], bitI + s % 8, GET_BIT(f.val[byteI], bitI));
+		}
+	}
+
+	return result;
 }
 //Логические		v<x v>x v==x v!=x  (op=)
 bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
