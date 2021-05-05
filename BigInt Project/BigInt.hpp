@@ -84,6 +84,34 @@ public:
 		this->size++;
 		val.emplace_back(byte(0));
 	}
+	void cutNulls() //totest
+	{
+		for (int i = size - 1; true; i--)
+		{
+			if (val[i] != BYTE_MIN || i == 0)
+			{
+				size = i + 1;
+				//vector<byte> result(BYTE_MIN, size);
+				//val.assign(this->size, 0);
+				//memcpy(&(result[0]), &(val[0]), size);
+				val.erase(val.end() - size);
+				return;
+			}
+		}
+	}
+	void cutOneNull()
+	{
+		if (val[size - 1] == BYTE_MIN)
+		{
+			val.erase(val.end() - 1);
+			size--;
+		}
+	}
+	void addOneNull()
+	{
+		val.emplace_back(BYTE_MIN);
+		size++;
+	}
 
 	//Внутриклассовые операторы
 	friend BigInt operator++(BigInt& i);
@@ -92,9 +120,14 @@ public:
 	friend BigInt operator--(BigInt& i, int);
 	friend BigInt operator+(const BigInt& f, const BigInt& s);
 	friend BigInt operator-(const BigInt& f, const BigInt& s);
-	friend const BigInt operator*(const BigInt& f, const BigInt& s);
-	friend const BigInt operator/(const BigInt& f, const BigInt& s);
-	friend const BigInt operator%(const BigInt& f, const BigInt& s);
+	friend BigInt operator*(const BigInt& f, const BigInt& s);
+	friend BigInt operator/(const BigInt& f, const BigInt& s);
+	friend BigInt operator%(const BigInt& f, const BigInt& s);
+	friend BigInt operator+=(const BigInt& f, const BigInt& s);
+	friend BigInt operator-=(const BigInt& f, const BigInt& s);
+	friend const BigInt operator*=(const BigInt& f, const BigInt& s);
+	friend const BigInt operator/=(const BigInt& f, const BigInt& s);
+	friend const BigInt operator%=(const BigInt& f, const BigInt& s);
 	//Битовые			v&x v<<x v>>x v^x v|x
 	friend const BigInt operator&(const BigInt& i, int j);
 	friend const BigInt operator^(const BigInt& i, int j);
@@ -257,6 +290,8 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 		}
 	}
 
+	result.cutOneNull();
+
 	return result;
 }
 BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
@@ -302,20 +337,58 @@ BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 
 	return result;
 }
-const BigInt operator*(const BigInt& f, const BigInt& s)
+BigInt operator+=(BigInt& f, const BigInt& s) //dependent, primitive
+{
+	f = f + s;
+	return f;
+}
+BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
+{
+	f = f - s;
+	return f;
+}
+BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f<100 0<=s<100
 {
 	log("v*j called");
-	throw exception("still in dev!");
+
+	BigInt result = 0;
+	for (int i = 0; i < s; i++)
+	{
+		result += f;
+	}
+
+	return result;
 }
-const BigInt operator/(const BigInt& f, const BigInt& s)
+pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
+{
+	if (f == BigInt(0) || s == BigInt(0))
+		throw exception("Division on zero");
+
+	BigInt result = 0;
+	while (true)
+	{
+		if (f >= s)
+		{
+			f -= s;
+			result++;
+		}
+		else
+			break;
+	}
+
+	return make_pair(f, result);
+}
+BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, tested 0<=f<500 0<=s<500
 {
 	log("v/j called");
-	throw exception("still in dev!");
+
+	return __div(f, s).second;
 }
-const BigInt operator%(const BigInt& f, const BigInt& s)
+BigInt operator%(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
 	log("v%j called");
-	throw exception("still in dev!");
+
+	return __div(f, s).first;
 }
 //(op=)
 //Битовые			v&x v<<x v>>x v^x v|x

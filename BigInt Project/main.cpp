@@ -9,22 +9,25 @@ int main()
 	BigInt a(0);
 
 	uint errorsCount = 0;
-	uint testsCount = 1000000;
+	uint testsCount = 500;
 
-	for (int i = 0; i <= testsCount; i++)
+	for (int i = 1; i <= testsCount; i++)
 	{
-		BigInt b(i);
-		long long int j = i;
-		long long int trueRes = j--;
-		long long int myRes = b--;
-
-		if (trueRes != myRes)
+		for (int j = 2; j <= testsCount; j++)
 		{
-			cout << "ERROR! " << endl;
-			errorsCount++;
-		}
-		else {
-			cout << i << endl;
+			BigInt a(i);
+			BigInt b(j);
+			long long int trueRes = i * j;
+			long long int myRes = a * b;
+
+			if (trueRes != myRes)
+			{
+				cout << "ERROR! " << i << ' ' << j << endl;
+				errorsCount++;
+			}
+			else {
+				cout << i << ' ' << j << endl;
+			}
 		}
 	}
 	cout << testsCount * testsCount - errorsCount << " tests passed" << endl;
@@ -32,6 +35,9 @@ int main()
 
 	return 0;
 }
+
+//Убрать лишний ноль в сложении
+//Дебажить сложный случай вычитания
 
 /*
 	++a;
