@@ -152,7 +152,6 @@ public:
 	//Операторы преобразования
 	operator char*()
 	{
-		log("char*(v) called");
 		throw exception("still in dev!");
 	}
 	operator unsigned long long int() //tested 0<=v<=200000
@@ -196,30 +195,22 @@ string to_string(BigInt& f) //dependent
 //Инк/декремент		++v --v v++ v--
 BigInt operator++(BigInt& i) //dependent, tested 0<=i<=1000000
 {
-	log("++v called");
-
 	i = i + BigInt(1);
 	return i;
 }
 BigInt operator--(BigInt& i) //dependent, tested 0<=i<=1000000
 {
-	log("--v called");
-
 	i = i - BigInt(1);
 	return i;
 }
 BigInt operator++(BigInt& i, int) //dependent, tested 0<=i<=1000000
 {
-	log("v++ called");
-
 	BigInt result = i;
 	i = i + BigInt(1);
 	return result;
 }
 BigInt operator--(BigInt& i, int) //dependent, tested 0<=i<=1000000
 {
-	log("v-- called");
-
 	BigInt result = i;
 	i = i - BigInt(1);
 	return result;
@@ -227,8 +218,6 @@ BigInt operator--(BigInt& i, int) //dependent, tested 0<=i<=1000000
 //Арифметика		+ - * / %  (op=)
 BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
 {
-	log("v+j called");
-
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //(-f) + s = s - (-(-f))
 		return s - (-f);
@@ -296,8 +285,6 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 }
 BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
 {
-	log("v-j called");
-
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //-f - s = -(f + s) = -(-(-f) + s)
 		return -(-f + s);
@@ -349,8 +336,6 @@ BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
 }
 BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f<100 0<=s<100
 {
-	log("v*j called");
-
 	BigInt result = 0;
 	for (int i = 0; i < s; i++)
 	{
@@ -380,48 +365,37 @@ pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, tested 0<=f<5
 }
 BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, tested 0<=f<500 0<=s<500
 {
-	log("v/j called");
-
 	return __div(f, s).second;
 }
 BigInt operator%(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
-	log("v%j called");
-
 	return __div(f, s).first;
 }
 //(op=)
 //Битовые			v&x v<<x v>>x v^x v|x
-const BigInt operator&(const BigInt& i, int j)
+const BigInt operator&(const BigInt& i, const BigInt& j)
 {
-	log("v&j called");
 	throw exception("still in dev!");
 }
-const BigInt operator^(const BigInt& i, int j)
+const BigInt operator^(const BigInt& i, const BigInt& j)
 {
-	log("v^j called");
 	throw exception("still in dev!");
 }
-const BigInt operator|(const BigInt& i, int j)
+const BigInt operator|(const BigInt& i, const BigInt& j)
 {
-	log("v|j called");
 	throw exception("still in dev!");
 }
-const BigInt operator<<(const BigInt& i, int j)
+const BigInt operator<<(const BigInt& i, const BigInt& j)
 {
-	log("v<<j called");
 	throw exception("still in dev!");
 }
-const BigInt operator>>(const BigInt& i, int j)
+const BigInt operator>>(const BigInt& i, const BigInt& j)
 {
-	log("v>>j called");
 	throw exception("still in dev!");
 }
 //Логические		v<x v>x v==x v!=x  (op=)
 bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
-	log("f<s called");
-
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //-f < s
 		return true;
@@ -459,26 +433,18 @@ bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=100
 }
 bool operator>(const BigInt& f, const BigInt& s) //dependent
 {
-	log("f>s called");
-
 	return s < f;
 }
 bool operator<=(const BigInt& f, const BigInt& s) //dependent
 {
-	log("f<=s called");
-
 	return (f < s || f == s);
 }
 bool operator>=(const BigInt& f, const BigInt& s) //dependent
 {
-	log("f>=s called");
-
 	return (f > s || f == s);
 }
 bool operator==(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
-	log("v==j called");
-
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //-f < s
 		return false;
@@ -504,28 +470,21 @@ bool operator==(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=10
 }
 bool operator!=(const BigInt& f, const BigInt& s) //dependent, primitive
 {
-	log("v!=j called");
-
 	return !(f == s);
 }
 //(Остальное)		+v -v v=x v[x](разряд x) x<<v x>>v
 const BigInt operator+(const BigInt& f) //independent, primitive
 {
-	log("+v called");
 	return f;
 }
 const BigInt operator-(const BigInt& f) //independent, primitive
 {
-	log("-v called");
-
 	BigInt result = f;
 	result.nonNegative = !result.nonNegative;
 	return result;
 }
 const BigInt& BigInt::operator=(const BigInt& i) //independent, primitive, tested 0<=i<=1000000
 {
-	log("v=j called");
-
 	this->size = i.size;
 	this->nonNegative = i.nonNegative;
 	this->val = i.val;
@@ -534,7 +493,6 @@ const BigInt& BigInt::operator=(const BigInt& i) //independent, primitive, teste
 }
 const BigInt& BigInt::operator[](const int index)
 {
-	log("v[j] called");
 	throw exception("still in dev!");
 }
 ostream& operator<<(ostream& out, BigInt& f) //dependent, primitive
