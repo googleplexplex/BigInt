@@ -81,8 +81,15 @@ public:
 	//Методы
 	void addByte()
 	{
-		this->size++;
+		size++;
 		val.emplace_back(byte(0));
+	}
+	void addBytes(int nullsCount)
+	{
+		vector<byte> newVal(size + nullsCount, 0);
+		memcpy(&(newVal[0]), &(val[0]), size);
+		size += nullsCount;
+		val = newVal;
 	}
 	void cutNulls() //totest
 	{
@@ -107,11 +114,6 @@ public:
 			size--;
 		}
 	}
-	void addOneNull()
-	{
-		val.emplace_back(BYTE_MIN);
-		size++;
-	}
 
 	//Внутриклассовые операторы
 	friend BigInt operator++(BigInt& i);
@@ -123,17 +125,17 @@ public:
 	friend BigInt operator*(const BigInt& f, const BigInt& s);
 	friend BigInt operator/(const BigInt& f, const BigInt& s);
 	friend BigInt operator%(const BigInt& f, const BigInt& s);
-	friend BigInt operator+=(const BigInt& f, const BigInt& s);
-	friend BigInt operator-=(const BigInt& f, const BigInt& s);
-	friend const BigInt operator*=(const BigInt& f, const BigInt& s);
-	friend const BigInt operator/=(const BigInt& f, const BigInt& s);
-	friend const BigInt operator%=(const BigInt& f, const BigInt& s);
+	friend BigInt operator+=(BigInt& f, const BigInt& s);
+	friend BigInt operator-=(BigInt& f, const BigInt& s);
+	friend BigInt operator*=(BigInt& f, const BigInt& s);
+	friend BigInt operator/=(BigInt& f, const BigInt& s);
+	friend BigInt operator%=(BigInt& f, const BigInt& s);
 	//Битовые			v&x v<<x v>>x v^x v|x
-	friend const BigInt operator&(const BigInt& i, int j);
-	friend const BigInt operator^(const BigInt& i, int j);
-	friend const BigInt operator|(const BigInt& i, int j);
-	friend const BigInt operator<<(const BigInt& i, int j);
-	friend const BigInt operator>>(const BigInt& i, int j);
+	friend BigInt operator&(const BigInt& i, const BigInt& j);
+	friend BigInt operator^(const BigInt& i, const BigInt& j);
+	friend BigInt operator|(const BigInt& i, const BigInt& j);
+	friend BigInt operator<<(const BigInt& i, int j);
+	friend BigInt operator>>(const BigInt& i, int j);
 	//Логические		v<x v>x v==x v!=x  (op=)
 	friend bool operator<(const BigInt& f, const BigInt& s);
 	friend bool operator>(const BigInt& f, const BigInt& s);
@@ -371,27 +373,47 @@ BigInt operator%(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 
 {
 	return __div(f, s).first;
 }
+BigInt operator*=(BigInt& f, const BigInt& s)
+{
+	f = f * s;
+	return f;
+}
+BigInt operator/=(BigInt& f, const BigInt& s)
+{
+	f = f / s;
+	return f;
+}
+BigInt operator%=(BigInt& f, const BigInt& s)
+{
+	f = f % s;
+	return f;
+}
 //(op=)
 //Битовые			v&x v<<x v>>x v^x v|x
-const BigInt operator&(const BigInt& f, const BigInt& s) //dependent, totest
+BigInt operator&(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
 	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result(0, biggestInt.size);
+	BigInt result;
+	result.size = biggestInt.size;
+	result.val.assign(result.size, 0);
 
 	for (int i = 0; i < minSize; i++)
 	{
 		result.val[i] = f.val[i] & s.val[i];
 	}
-	memset(&(result.val[minSize]), BYTE_MIN, biggestInt.size - minSize); // v AND 0 = 0
+	if(biggestInt.size != minSize)
+		memset(&(result.val[minSize]), 0, biggestInt.size - minSize); // v AND 0 = 0
 
 	return result;
 }
-const BigInt operator^(const BigInt& f, const BigInt& s) //dependent, totest
+BigInt operator^(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
 	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result(0, biggestInt.size);
+	BigInt result;
+	result.size = biggestInt.size;
+	result.val.assign(result.size, 0);
 
 	for (int i = 0; i < minSize; i++)
 	{
@@ -404,11 +426,13 @@ const BigInt operator^(const BigInt& f, const BigInt& s) //dependent, totest
 
 	return result;
 }
-const BigInt operator|(const BigInt& f, const BigInt& s) //dependent, totest
+BigInt operator|(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
 	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result(0, biggestInt.size);
+	BigInt result;
+	result.size = biggestInt.size;
+	result.val.assign(result.size, 0);
 
 	for (int i = 0; i < minSize; i++)
 	{
@@ -421,27 +445,56 @@ const BigInt operator|(const BigInt& f, const BigInt& s) //dependent, totest
 
 	return result;
 }
-const BigInt operator<<(const BigInt& f, int s) //dependent, totest
+BigInt operator<<(BigInt& f, int s) //dependent, tested 0<=f<500 0<=s<=8
 {
-	BigInt result(0, f.size);
-	for (int byteI = 0; byteI < f.size - s; byteI++)
+	BigInt result;
+	result.size = f.size;
+	result.val.assign(result.size, 0);
+
+	for (int byteI = 0; byteI < f.size; byteI++)
 	{
 		for (int bitI = 0; bitI < 8; bitI++)
 		{
-			SET_BIT(result.val[byteI], bitI, GET_BIT(f.val[byteI + s/8], bitI + s%8));
+			int inPos_inBits = byteI * 8 + bitI + s;
+			int inPos_bytesOnly = inPos_inBits / 8;
+			int inPos_bitsOnly = inPos_inBits % 8;
+			int outPos_bytesOnly = byteI;
+			int outPos_bitsOnly = bitI;
+
+			if (inPos_bytesOnly >= result.size)
+				return result;
+
+			byte& in = result.val[inPos_bytesOnly];
+			bool value = GET_BIT(f.val[outPos_bytesOnly], outPos_bitsOnly);
+			SET_BIT(in, inPos_bitsOnly, value);
 		}
 	}
 
 	return result;
 }
-const BigInt operator>>(const BigInt& f, int s) //dependent, totest
+BigInt operator>>(BigInt& f, int s) //dependent, tested 0<=f<500 0<=s<=8
 {
-	BigInt result(0, f.size);
-	for (int byteI = 0; byteI < f.size - s; byteI++)
+	BigInt result;
+	result.size = f.size;
+	result.val.assign(result.size, 0);
+
+	for (int byteI = 0; byteI < f.size; byteI++)
 	{
 		for (int bitI = 0; bitI < 8; bitI++)
 		{
-			SET_BIT(result.val[byteI + s / 8], bitI + s % 8, GET_BIT(f.val[byteI], bitI));
+			int inPos_bytesOnly = byteI;
+			int inPos_bitsOnly = bitI;
+
+			int outPos_inBits = byteI * 8 + bitI + s;
+			int outPos_bytesOnly = outPos_inBits / 8;
+			int outPos_bitsOnly = outPos_inBits % 8;
+
+			if (outPos_bytesOnly >= result.size)
+				return result;
+
+			byte& in = result.val[inPos_bytesOnly];
+			bool value = GET_BIT(f.val[outPos_bytesOnly], outPos_bitsOnly);
+			SET_BIT(in, inPos_bitsOnly, value);
 		}
 	}
 

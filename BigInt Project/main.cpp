@@ -11,14 +11,15 @@ int main()
 	uint errorsCount = 0;
 	uint testsCount = 500;
 
-	for (int i = 1; i <= testsCount; i++)
+	for (int i = 0; i <= testsCount; i++)
 	{
-		for (int j = 2; j <= testsCount; j++)
+		for (int j = 0; j <= 8; j++)
 		{
 			BigInt a(i);
+			a.addBytes(8 - a.size);
 			BigInt b(j);
-			long long int trueRes = i * j;
-			long long int myRes = a * b;
+			long long int trueRes = i >> j;
+			long long int myRes = a >> j;
 
 			if (trueRes != myRes)
 			{
