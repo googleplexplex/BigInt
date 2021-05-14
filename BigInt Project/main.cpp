@@ -6,7 +6,7 @@ using namespace std;
 int main()
 {
 
-	for (BigInt i = 0; i != BigInt(UINT_MAX); i++)
+	for (BigInt i = 10; i != BigInt(UINT_MAX); i++)
 	{
 		string istr = to_string(i);
 		BigInt j(istr);

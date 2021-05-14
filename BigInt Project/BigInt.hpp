@@ -8,55 +8,30 @@ T Abs(T num);
 class BigInt;
 BigInt Pow(const BigInt& base, const BigInt& exp);
 
+typedef enum intNegative : byte
+{
+	negative = BYTE_MIN,
+	positive = BYTE_MIN + 1
+};
 
 class BigInt
 {
 public:
 	uint size;
-	bool nonNegative;
+	intNegative nonNegative;
 public:
 	vector<byte> val;
 
 	BigInt()
 	{
-		size = 0;
-		nonNegative = true;
-	}
-	template <typename startValueType>
-	BigInt(startValueType value, uint size) //Destory cutNulls!!!!! -------------------------------------------
-	{
-		if constexpr (!is_arithmetic<startValueType>::value && is_same<startValueType, BigInt>::value)
-			throw notArithmeticTypeException("startValueType");
-
-		if (size >= sizeof(value))
-		{
-			this->size = size;
-			val.assign(size, 0);
-			nonNegative = bool(value >= 0);
-			startValueType valueModule = Abs(value);
-			memcpy(&(val[0]), &valueModule, sizeof(valueModule));
-		}
-		else
-		{
-			for (int i = sizeof(value) - 1; true; i--)
-			{
-				if (GET_BYTE(value, i) != NULL || i == 0)
-				{
-					this->size = i + 1;
-					val.assign(this->size, 0);
-					nonNegative = bool(value >= 0);
-					startValueType valueModule = Abs(value);
-					memcpy(&(val[0]), &valueModule, this->size);
-					break;
-				}
-			}
-		}
+		size = 1;
+		nonNegative = positive;
+		val.push_back(BYTE_MIN);
 	}
 
 	BigInt(string value) //indev, tested 0<=value<=3000
 	{
-		nonNegative = true;
-
+		nonNegative = positive;
 		if (value[0] == NULL)
 		{
 			(*this) = BigInt(0);
@@ -64,12 +39,13 @@ public:
 		}
 		if (value[0] == '-') //totest!!
 		{
-			nonNegative = false;
+			nonNegative = negative;
 			value.erase(value.begin());
 		}
-
-		val.assign(value.size(), BYTE_MIN);
-		size = value.size();
+		//val.assign(value.size(), BYTE_MIN);
+		//size = value.size();
+		size = 1;
+		val.push_back(BYTE_MIN);
 		
 		for (int i = 0; i < value.size(); i++)
 		{
@@ -78,8 +54,7 @@ public:
 			(*this) += digitNum * powerOfTen; //overflow!
 		}
 
-		cutNulls();
-		//throw exception("still in dev!");
+		cutNulls(); //indev
 	}
 	
 	template <typename startValueType>
@@ -94,7 +69,7 @@ public:
 			{
 				this->size = i + 1;
 				val.assign(this->size, 0);
-				nonNegative = bool(value >= 0);
+				nonNegative = (value >= 0) ? (positive) : (negative);
 				startValueType valueModule = Abs(value);
 				memcpy(&(val[0]), &valueModule, this->size);
 				break;
@@ -105,6 +80,7 @@ public:
 	//Деконструкторы
 
 	//Методы
+public: //private: -------------------------------------------
 	void addByte()
 	{
 		size++;
@@ -139,21 +115,6 @@ public:
 				return;
 			}
 		}
-
-		//for (int i = size - 1; true; i--)
-		//{
-		//	if (i == 0)
-		//		break;
-		//	if (val[i] != BYTE_MIN || i == 0)
-		//	{
-		//		size = i + 1;
-		//		//vector<byte> result(BYTE_MIN, size);
-		//		//val.assign(this->size, 0);
-		//		//memcpy(&(result[0]), &(val[0]), size);
-		//		val.erase(val.end() - size);
-		//		return;
-		//	}
-		//}
 	}
 	void cutOneNull()
 	{
@@ -163,6 +124,7 @@ public:
 			size--;
 		}
 	}
+public:
 
 	//Внутриклассовые операторы
 	friend BigInt operator++(BigInt& i);
@@ -244,30 +206,30 @@ string to_string(BigInt& f) //dependent
 
 //Операторы
 //Инк/декремент		++v --v v++ v--
-BigInt operator++(BigInt& i) //dependent, tested 0<=i<=1000000
+BigInt operator++(BigInt& i) //dependent, totest
 {
 	i = i + BigInt(1);
 	return i;
 }
-BigInt operator--(BigInt& i) //dependent, tested 0<=i<=1000000
+BigInt operator--(BigInt& i) //dependent, totest
 {
 	i = i - BigInt(1);
 	return i;
 }
-BigInt operator++(BigInt& i, int) //dependent, tested 0<=i<=1000000
+BigInt operator++(BigInt& i, int) //dependent, totest
 {
 	BigInt result = i;
 	i = i + BigInt(1);
 	return result;
 }
-BigInt operator--(BigInt& i, int) //dependent, tested 0<=i<=1000000
+BigInt operator--(BigInt& i, int) //dependent, totest
 {
 	BigInt result = i;
 	i = i - BigInt(1);
 	return result;
 }
 //Арифметика		+ - * / %  (op=)
-BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
+BigInt operator+(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //(-f) + s = s - (-(-f))
@@ -278,20 +240,17 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 		return -((-f) + (-s));
 	//f >= 0, s >= 0
 
-	BigInt validateF = f; validateF.cutNulls();
-	BigInt validateS = s; validateS.cutNulls();
-
 	BigInt result;
-	result.size = ((validateF >= validateS) ? (validateF.size) : (validateS.size)) + 1;
+	result.size = ((f >= s) ? (f.size) : (s.size)) + 1;
 	result.val.assign(result.size, 0);
 
-	const BigInt& biggerInt = (validateF >= validateS) ? (validateF) : (validateS);
-	const BigInt& smallerInt = (validateF >= validateS) ? (validateS) : (validateF);
+	const BigInt& biggerInt = (f >= s) ? (f) : (s);
+	const BigInt& smallerInt = (f >= s) ? (s) : (f);
 
 	bool addOne = false;
 	for (int i = 0; i < smallerInt.size; i++) //Складываем числа
 	{
-		short presentResult = validateF.val[i] + validateS.val[i];
+		short presentResult = f.val[i] + s.val[i];
 
 		if (addOne)
 		{
@@ -333,11 +292,11 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 		}
 	}
 
-	result.cutOneNull();
+	result.cutOneNull(); //indev!!
 
 	return result;
 }
-BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000 0<=s<1000
+BigInt operator-(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	//Валидируем аргументы
 	if (!f.nonNegative && s.nonNegative) //-f - s = -(f + s) = -(-(-f) + s)
@@ -376,6 +335,8 @@ BigInt operator-(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 		}
 	}
 
+	result.cutOneNull(); //indev!!
+
 	return result;
 }
 BigInt operator+=(BigInt& f, const BigInt& s) //dependent, primitive
@@ -388,7 +349,7 @@ BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
 	f = f - s;
 	return f;
 }
-BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f<100 0<=s<100
+BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, totest
 {
 	if (f == 0 || s == 0) return 0;
 	if (f == 1) return s;
@@ -402,7 +363,7 @@ BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f
 
 	return result;
 }
-pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
+pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, totest
 {
 	if (f == BigInt(0))
 		return pair<BigInt, BigInt>(0, 0);
@@ -423,11 +384,11 @@ pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, tested 0<=f<5
 
 	return make_pair(f, result);
 }
-BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, tested 0<=f<500 0<=s<500
+BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, totest
 {
 	return __div(f, s).second;
 }
-BigInt operator%(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
+BigInt operator%(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	return __div(f, s).first;
 }
@@ -566,8 +527,6 @@ bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=100
 		return true;
 	if (f.nonNegative && !s.nonNegative) //f < -s
 		return false;
-	BigInt validF = f; validF.cutNulls();
-	BigInt validS = s; validS.cutNulls();
 
 	if (f.size < s.size)
 	{
@@ -647,7 +606,7 @@ const BigInt operator+(const BigInt& f) //independent, primitive
 const BigInt operator-(const BigInt& f) //independent, primitive
 {
 	BigInt result = f;
-	result.nonNegative = !result.nonNegative;
+	//result.nonNegative = !result.nonNegative;
 	return result;
 }
 const BigInt& BigInt::operator=(const BigInt& i) //independent, primitive, tested 0<=i<=1000000
