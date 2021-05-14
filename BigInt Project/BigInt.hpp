@@ -5,6 +5,8 @@ using namespace std;
 
 template<typename T>
 T Abs(T num);
+class BigInt;
+BigInt Pow(const BigInt& base, const BigInt& exp);
 
 
 class BigInt
@@ -21,7 +23,7 @@ public:
 		nonNegative = true;
 	}
 	template <typename startValueType>
-	BigInt(startValueType value, uint size)
+	BigInt(startValueType value, uint size) //Destory cutNulls!!!!! -------------------------------------------
 	{
 		if constexpr (!is_arithmetic<startValueType>::value && is_same<startValueType, BigInt>::value)
 			throw notArithmeticTypeException("startValueType");
@@ -51,9 +53,33 @@ public:
 		}
 	}
 
-	BigInt(string value)
+	BigInt(string value) //indev, tested 0<=value<=3000
 	{
-		throw exception("still in dev!");
+		nonNegative = true;
+
+		if (value[0] == NULL)
+		{
+			(*this) = BigInt(0);
+			return;
+		}
+		if (value[0] == '-') //totest!!
+		{
+			nonNegative = false;
+			value.erase(value.begin());
+		}
+
+		val.assign(value.size(), BYTE_MIN);
+		size = value.size();
+		
+		for (int i = 0; i < value.size(); i++)
+		{
+			BigInt digitNum = BigInt(value[i] - '0');
+			BigInt powerOfTen = Pow(BigInt(10), BigInt(value.size() - i - 1));
+			(*this) += digitNum * powerOfTen; //overflow!
+		}
+
+		cutNulls();
+		//throw exception("still in dev!");
 	}
 	
 	template <typename startValueType>
@@ -95,16 +121,39 @@ public:
 	{
 		for (int i = size - 1; true; i--)
 		{
-			if (val[i] != BYTE_MIN || i == 0)
+			if (i == 0)
 			{
+				if (val[i] == BYTE_MIN)
+				{
+					val.assign(1, BYTE_MIN);
+					size = 1;
+				}
+				return;
+			}
+			if (val[i] != BYTE_MIN)
+			{
+				vector<byte> newVal(i + 1, BYTE_MIN);
+				memcpy(&(newVal[0]), &(val[0]), i + 1);
+				val = newVal;
 				size = i + 1;
-				//vector<byte> result(BYTE_MIN, size);
-				//val.assign(this->size, 0);
-				//memcpy(&(result[0]), &(val[0]), size);
-				val.erase(val.end() - size);
 				return;
 			}
 		}
+
+		//for (int i = size - 1; true; i--)
+		//{
+		//	if (i == 0)
+		//		break;
+		//	if (val[i] != BYTE_MIN || i == 0)
+		//	{
+		//		size = i + 1;
+		//		//vector<byte> result(BYTE_MIN, size);
+		//		//val.assign(this->size, 0);
+		//		//memcpy(&(result[0]), &(val[0]), size);
+		//		val.erase(val.end() - size);
+		//		return;
+		//	}
+		//}
 	}
 	void cutOneNull()
 	{
@@ -229,17 +278,20 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<1000
 		return -((-f) + (-s));
 	//f >= 0, s >= 0
 
+	BigInt validateF = f; validateF.cutNulls();
+	BigInt validateS = s; validateS.cutNulls();
+
 	BigInt result;
-	result.size = ((f >= s) ? (f.size) : (s.size)) + 1;
+	result.size = ((validateF >= validateS) ? (validateF.size) : (validateS.size)) + 1;
 	result.val.assign(result.size, 0);
 
-	const BigInt& biggerInt = (f >= s) ? (f) : (s);
-	const BigInt& smallerInt = (f >= s) ? (s) : (f);
+	const BigInt& biggerInt = (validateF >= validateS) ? (validateF) : (validateS);
+	const BigInt& smallerInt = (validateF >= validateS) ? (validateS) : (validateF);
 
 	bool addOne = false;
 	for (int i = 0; i < smallerInt.size; i++) //Складываем числа
 	{
-		short presentResult = f.val[i] + s.val[i];
+		short presentResult = validateF.val[i] + validateS.val[i];
 
 		if (addOne)
 		{
@@ -338,6 +390,10 @@ BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
 }
 BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f<100 0<=s<100
 {
+	if (f == 0 || s == 0) return 0;
+	if (f == 1) return s;
+	if (s == 1) return f;
+
 	BigInt result = 0;
 	for (int i = 0; i < s; i++)
 	{
@@ -348,7 +404,9 @@ BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, tested 0<=f
 }
 pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
-	if (f == BigInt(0) || s == BigInt(0))
+	if (f == BigInt(0))
+		return pair<BigInt, BigInt>(0, 0);
+	if (s == BigInt(0))
 		throw exception("Division on zero");
 
 	BigInt result = 0;
@@ -508,6 +566,8 @@ bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=100
 		return true;
 	if (f.nonNegative && !s.nonNegative) //f < -s
 		return false;
+	BigInt validF = f; validF.cutNulls();
+	BigInt validS = s; validS.cutNulls();
 
 	if (f.size < s.size)
 	{
@@ -638,4 +698,19 @@ T Abs(T num)
 		return num;
 	else //T is signed && num < 0
 		return 0 - num;
+}
+
+BigInt Pow(const BigInt& base, const BigInt& exp) //indev, totest
+{
+	if (exp == 0) return 1;
+	if (exp == 1) return base;
+
+	BigInt result = 1;
+
+	for (BigInt i = 0; i < exp; i++)
+	{
+		result *= base;
+	}
+
+	return result;
 }

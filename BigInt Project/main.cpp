@@ -5,6 +5,25 @@ using namespace std;
 
 int main()
 {
+
+	for (BigInt i = 0; i != BigInt(UINT_MAX); i++)
+	{
+		string istr = to_string(i);
+		BigInt j(istr);
+
+		if (i != j)
+		{
+			cout << "ERROR! " << j << " not " << i << endl;
+		}
+		else {
+			cout << j << " ok" << endl;
+		}
+	}
+
+
+
+
+
 	long long int llia = 258;
 	BigInt a(0);
 
@@ -18,6 +37,7 @@ int main()
 			BigInt a(i);
 			a.addBytes(8 - a.size);
 			BigInt b(j);
+			unsigned long long int t = 0; t--;
 			long long int trueRes = i >> j;
 			long long int myRes = a >> j;
 
