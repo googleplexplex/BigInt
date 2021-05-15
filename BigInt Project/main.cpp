@@ -6,12 +6,12 @@ using namespace std;
 int main()
 {
 
-	for (BigInt i = 10; i != BigInt(UINT_MAX); i++)
+	for (uint i = 15; i < UINT_MAX - 1; i++)
 	{
-		string istr = to_string(i);
-		BigInt j(istr);
+		string trueStr = to_string(i);
+		BigInt j(trueStr);
 
-		if (i != j)
+		if (BigInt(i) != j)
 		{
 			cout << "ERROR! " << j << " not " << i << endl;
 		}

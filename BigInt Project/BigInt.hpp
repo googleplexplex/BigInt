@@ -5,8 +5,14 @@ using namespace std;
 
 template<typename T>
 T Abs(T num);
+template<typename T>
+T Pow(const T& base, const T& exp);
 class BigInt;
-BigInt Pow(const BigInt& base, const BigInt& exp);
+pair<BigInt, BigInt> __div(BigInt f, const BigInt& s);
+string to_string(BigInt& f);
+BigInt to_BigInt(string& value);
+template<typename T>
+bool is_Arithmetic(T);
 
 typedef enum intNegative : byte
 {
@@ -19,7 +25,6 @@ class BigInt
 public:
 	uint size;
 	intNegative nonNegative;
-public:
 	vector<byte> val;
 
 	BigInt()
@@ -31,30 +36,7 @@ public:
 
 	BigInt(string value) //indev, tested 0<=value<=3000
 	{
-		nonNegative = positive;
-		if (value[0] == NULL)
-		{
-			(*this) = BigInt(0);
-			return;
-		}
-		if (value[0] == '-') //totest!!
-		{
-			nonNegative = negative;
-			value.erase(value.begin());
-		}
-		//val.assign(value.size(), BYTE_MIN);
-		//size = value.size();
-		size = 1;
-		val.push_back(BYTE_MIN);
-		
-		for (int i = 0; i < value.size(); i++)
-		{
-			BigInt digitNum = BigInt(value[i] - '0');
-			BigInt powerOfTen = Pow(BigInt(10), BigInt(value.size() - i - 1));
-			(*this) += digitNum * powerOfTen; //overflow!
-		}
-
-		cutNulls(); //indev
+		(*this) = to_BigInt(value);
 	}
 	
 	template <typename startValueType>
@@ -118,6 +100,8 @@ public: //private: -------------------------------------------
 	}
 	void cutOneNull()
 	{
+		if (val[0] == BYTE_MIN && size == 1)
+			return;
 		if (val[size - 1] == BYTE_MIN)
 		{
 			val.erase(val.end() - 1);
@@ -163,9 +147,9 @@ public:
 	friend istream& operator>>(istream& in, BigInt& point);
 
 	//Операторы преобразования
-	operator char*()
+	operator const char*() //dependent, primitive, totest
 	{
-		throw exception("still in dev!");
+		return to_string((*this)).c_str();
 	}
 	operator unsigned long long int() //tested 0<=v<=200000
 	{
@@ -191,17 +175,54 @@ public:
 		else
 			throw exception("still in dev!");
 	}
+	operator char()
+	{
+		if (nonNegative == positive && (*this) <= BigInt(9))
+			return '0' + val[0];
+		else
+			throw exception("still in dev!");
+	}
 	//(Любой численный тип)
 };
-string to_string(BigInt& f) //dependent
+string to_string(BigInt& f) //dependent, tested 0<=f<=3000
 {
-	if (f.nonNegative && f.size <= sizeof(unsigned long long int))
-		return to_string((unsigned long long int)(f));
-	else if(!f.nonNegative && f.size <= sizeof(long long int))
-		return to_string((long long int)(f));
-	else
-		throw exception("still in dev!");
-	//return string(static_cast<char*>(*this));
+	string result = "";
+	BigInt workAt = f;
+
+	while (workAt != BigInt(0))
+	{
+		auto divResult = __div(workAt, 10);
+		result.push_back(char(divResult.first));
+		workAt = divResult.second;
+	}
+	reverse(result.begin(), result.end());
+
+	if (result == "")
+		return "0";
+
+	return result;
+}
+BigInt to_BigInt(string& value) //dependent, tested 0<=f<=3000
+{
+	BigInt result;
+
+	if (value[0] == NULL)
+		return BigInt(0);
+	if (value[0] == '-') //totest!!
+	{
+		result.nonNegative = negative;
+		value.erase(value.begin());
+	}
+
+	for (int i = 0; i < value.size(); i++)
+	{
+		BigInt digitNum = BigInt(value[i] - '0');
+		BigInt powerOfTen = Pow(BigInt(10), BigInt(value.size() - i - 1));
+		result += digitNum * powerOfTen;
+	}
+
+	result.cutNulls(); //indev
+	return result;
 }
 
 //Операторы
@@ -339,16 +360,6 @@ BigInt operator-(const BigInt& f, const BigInt& s) //dependent, totest
 
 	return result;
 }
-BigInt operator+=(BigInt& f, const BigInt& s) //dependent, primitive
-{
-	f = f + s;
-	return f;
-}
-BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
-{
-	f = f - s;
-	return f;
-}
 BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, totest
 {
 	if (f == 0 || s == 0) return 0;
@@ -362,6 +373,21 @@ BigInt operator*(const BigInt& f, const BigInt& s) //dependent, dev, totest
 	}
 
 	return result;
+}
+BigInt operator+=(BigInt& f, const BigInt& s) //dependent, primitive
+{
+	f = f + s;
+	return f;
+}
+BigInt operator-=(BigInt& f, const BigInt& s) //dependent, primitive
+{
+	f = f - s;
+	return f;
+}
+BigInt operator*=(BigInt& f, const BigInt& s)
+{
+	f = f * s;
+	return f;
 }
 pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, totest
 {
@@ -382,7 +408,7 @@ pair<BigInt, BigInt> __div(BigInt f, const BigInt& s) //dependent, totest
 			break;
 	}
 
-	return make_pair(f, result);
+	return make_pair(f, result); //%, /
 }
 BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, totest
 {
@@ -391,11 +417,6 @@ BigInt operator/(const BigInt& f, const BigInt& s) //dependent, primitive, totes
 BigInt operator%(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	return __div(f, s).first;
-}
-BigInt operator*=(BigInt& f, const BigInt& s)
-{
-	f = f * s;
-	return f;
 }
 BigInt operator/=(BigInt& f, const BigInt& s)
 {
@@ -407,7 +428,6 @@ BigInt operator%=(BigInt& f, const BigInt& s)
 	f = f % s;
 	return f;
 }
-//(op=)
 //Битовые			v&x v<<x v>>x v^x v|x
 BigInt operator&(const BigInt& f, const BigInt& s) //dependent, tested 0<=f<500 0<=s<500
 {
@@ -626,7 +646,6 @@ ostream& operator<<(ostream& out, BigInt& f) //dependent, primitive
 	out << to_string(f);
 	return out;
 }
-
 istream& operator>>(istream& in, BigInt& f)
 {
 	throw exception("still in dev!");
@@ -650,7 +669,7 @@ istream& operator>>(istream& in, BigInt& f)
 template<typename T>
 T Abs(T num)
 {
-	if (!is_arithmetic<T>::value || is_same<T, BigInt>::value)
+	if (!is_Arithmetic(num))
 		throw notArithmeticTypeException("T");
 
 	if (is_unsigned<T>::value || num >= 0)
@@ -659,17 +678,27 @@ T Abs(T num)
 		return 0 - num;
 }
 
-BigInt Pow(const BigInt& base, const BigInt& exp) //indev, totest
+template<typename T>
+T Pow(const T& base, const T& exp) //indev, totest
 {
+	if (!is_Arithmetic(base))
+		throw notArithmeticTypeException("T");
+
 	if (exp == 0) return 1;
 	if (exp == 1) return base;
 
-	BigInt result = 1;
+	T result = 1;
 
-	for (BigInt i = 0; i < exp; i++)
+	for (T i = 0; i < exp; i++)
 	{
 		result *= base;
 	}
 
 	return result;
+}
+
+template<typename T>
+bool is_Arithmetic(T)
+{
+	return (is_arithmetic<T>::value || is_same<T, BigInt>::value);
 }
