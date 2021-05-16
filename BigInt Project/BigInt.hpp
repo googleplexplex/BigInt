@@ -14,6 +14,8 @@ BigInt to_BigInt(string& value);
 template<typename T>
 bool is_Arithmetic(T);
 
+struct __warningHolderStruct;
+
 typedef enum intNegative : byte
 {
 	negative = BYTE_MIN,
@@ -24,13 +26,15 @@ class BigInt
 {
 public:
 	uint size;
-	intNegative nonNegative;
+	intNegative sign;
 	vector<byte> val;
 
+	//Конструкторы
+public:
 	BigInt()
 	{
 		size = 1;
-		nonNegative = positive;
+		sign = positive;
 		val.push_back(BYTE_MIN);
 	}
 
@@ -51,7 +55,7 @@ public:
 			{
 				this->size = i + 1;
 				val.assign(this->size, 0);
-				nonNegative = (value >= 0) ? (positive) : (negative);
+				sign = (value >= 0) ? (positive) : (negative);
 				startValueType valueModule = Abs(value);
 				memcpy(&(val[0]), &valueModule, this->size);
 				break;
@@ -59,10 +63,28 @@ public:
 		}
 	}
 
-	//Деконструкторы
+	BigInt(vector<byte>& value, intNegative sign = positive) //totest
+	{
+		size = value.size();
+		this->sign = sign;
+		val = value;
+	}
 
 	//Методы
-public: //private: -------------------------------------------
+public:
+	uint getSize()
+	{
+		return size;
+	}
+	intNegative getSign()
+	{
+		return sign;
+	}
+	vector<byte> getByteArray()
+	{
+		return val;
+	}
+private:
 	void addByte()
 	{
 		size++;
@@ -108,9 +130,9 @@ public: //private: -------------------------------------------
 			size--;
 		}
 	}
-public:
 
 	//Внутриклассовые операторы
+public:
 	friend BigInt operator++(BigInt& i);
 	friend BigInt operator--(BigInt& i);
 	friend BigInt operator++(BigInt& i, int);
@@ -129,8 +151,8 @@ public:
 	friend BigInt operator&(const BigInt& i, const BigInt& j);
 	friend BigInt operator^(const BigInt& i, const BigInt& j);
 	friend BigInt operator|(const BigInt& i, const BigInt& j);
-	friend BigInt operator<<(const BigInt& i, int j);
-	friend BigInt operator>>(const BigInt& i, int j);
+	friend BigInt operator>>(BigInt& f, int s);
+	friend BigInt operator<<(BigInt& f, int s);
 	//Логические		v<x v>x v==x v!=x  (op=)
 	friend bool operator<(const BigInt& f, const BigInt& s);
 	friend bool operator>(const BigInt& f, const BigInt& s);
@@ -147,40 +169,77 @@ public:
 	friend istream& operator>>(istream& in, BigInt& point);
 
 	//Операторы преобразования
-	operator const char*() //dependent, primitive, totest
+	operator char*() //dependent, primitive, totest
 	{
-		return to_string((*this)).c_str();
+		char* result = new char[size];
+		string resultStr = to_string(*this);
+		memcpy(result, resultStr.c_str(), size);
+
+		return result;
 	}
-	operator unsigned long long int() //tested 0<=v<=200000
+
+	operator unsigned long long int() //totest
 	{
-		if (nonNegative && size <= sizeof(unsigned long long int))
-		{
-			unsigned long long int result = 0;
-			memcpy(&result, &val[0], size);
-			return result;
-		}
+		if(sign == negative && size > sizeof(unsigned long long int))
+			warningHolder.setWarning("Convert signed type to unsigned + Converted BigInt bigger than unsigned long long type");
 		else
-			throw exception("still in dev!");
+		{
+			if (sign == negative)
+				warningHolder.setWarning("Convert signed type to unsigned");
+			if (size > sizeof(unsigned long long int))
+				warningHolder.setWarning("Converted BigInt bigger than unsigned long long type");
+		}
+		
+		unsigned long long int result = 0;
+		memcpy(&result, &val[0], size);
+		return result;
 	}
 	operator long long int() //tested -500000<=v<=500000
 	{
-		if (size <= sizeof(long long int))
-		{
-			long long int result = 0;
-			memcpy(&result, &val[0], size);
-			if (!nonNegative)
-				result *= -1;
-			return result;
-		}
-		else
-			throw exception("still in dev!");
+		if(size > sizeof(long long int))
+			warningHolder.setWarning("Converted BigInt bigger than long long type");
+
+		long long int result = 0;
+		memcpy(&result, &val[0], size);
+		if (!sign)
+			result *= -1;
+		return result;
+	}
+	operator unsigned int()
+	{
+		//still in dev
+
+		return 0;
+	}
+	operator int()
+	{
+		//still in dev
+
+		return 0;
+	}
+	operator unsigned short()
+	{
+		//still in dev
+
+		return 0;
+	}
+	operator short()
+	{
+		//still in dev
+
+		return 0;
+	}
+	operator unsigned char() //This is byte() too
+	{
+		//still in dev
+
+		return 0;
 	}
 	operator char()
 	{
-		if (nonNegative == positive && (*this) <= BigInt(9))
-			return '0' + val[0];
-		else
-			throw exception("still in dev!");
+		//still in dev
+
+		return 0;
 	}
 	//(Любой численный тип)
 };
@@ -210,7 +269,7 @@ BigInt to_BigInt(string& value) //dependent, tested 0<=f<=3000
 		return BigInt(0);
 	if (value[0] == '-') //totest!!
 	{
-		result.nonNegative = negative;
+		result = -result;
 		value.erase(value.begin());
 	}
 
@@ -221,8 +280,16 @@ BigInt to_BigInt(string& value) //dependent, tested 0<=f<=3000
 		result += digitNum * powerOfTen;
 	}
 
-	result.cutNulls(); //indev
 	return result;
+}
+char to_char(BigInt& value)
+{
+	if(value.getSign() == negative)
+
+	if (value.sign == positive && value <= BigInt(9))
+		return '0' + value.getByteArray()[0];
+	else
+		throw exception("still in dev!");
 }
 
 //Операторы
@@ -253,11 +320,11 @@ BigInt operator--(BigInt& i, int) //dependent, totest
 BigInt operator+(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	//Валидируем аргументы
-	if (!f.nonNegative && s.nonNegative) //(-f) + s = s - (-(-f))
+	if (!f.sign && s.sign) //(-f) + s = s - (-(-f))
 		return s - (-f);
-	if (f.nonNegative && !s.nonNegative) //f + (-s) = f - (-(-s))
+	if (f.sign && !s.sign) //f + (-s) = f - (-(-s))
 		return f - (-s);
-	if (!f.nonNegative && !s.nonNegative) //(-f) + (-s) = -((-(-f)) + (-(-s)))
+	if (!f.sign && !s.sign) //(-f) + (-s) = -((-(-f)) + (-(-s)))
 		return -((-f) + (-s));
 	//f >= 0, s >= 0
 
@@ -320,11 +387,11 @@ BigInt operator+(const BigInt& f, const BigInt& s) //dependent, totest
 BigInt operator-(const BigInt& f, const BigInt& s) //dependent, totest
 {
 	//Валидируем аргументы
-	if (!f.nonNegative && s.nonNegative) //-f - s = -(f + s) = -(-(-f) + s)
+	if (!f.sign && s.sign) //-f - s = -(f + s) = -(-(-f) + s)
 		return -(-f + s);
-	if (f.nonNegative && !s.nonNegative) //f - (-s) = f + s = f + -(-s)
+	if (f.sign && !s.sign) //f - (-s) = f + s = f + -(-s)
 		return f + -s;
-	if (!f.nonNegative && !s.nonNegative) //-f - (-s) = -f + s = s - f = -(-s) - -(-f)
+	if (!f.sign && !s.sign) //-f - (-s) = -f + s = s - f = -(-s) - -(-f)
 		return -s - -f;
 	if (s > f) //f - s = -(s - f)  (Только если s > f)
 		return -(s - f);
@@ -543,9 +610,9 @@ BigInt operator>>(BigInt& f, int s) //dependent, tested 0<=f<500 0<=s<=8
 bool operator<(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
 	//Валидируем аргументы
-	if (!f.nonNegative && s.nonNegative) //-f < s
+	if (!f.sign && s.sign) //-f < s
 		return true;
-	if (f.nonNegative && !s.nonNegative) //f < -s
+	if (f.sign && !s.sign) //f < -s
 		return false;
 
 	if (f.size < s.size)
@@ -592,9 +659,9 @@ bool operator>=(const BigInt& f, const BigInt& s) //dependent
 bool operator==(const BigInt& f, const BigInt& s) //independent, tested 0<=f<=1001 0<=s<=1001
 {
 	//Валидируем аргументы
-	if (!f.nonNegative && s.nonNegative) //-f < s
+	if (!f.sign && s.sign) //-f < s
 		return false;
-	if (f.nonNegative && !s.nonNegative) //f < -s
+	if (f.sign && !s.sign) //f < -s
 		return false;
 
 	const BigInt& biggerInt = (f.size >= s.size) ? (f) : (s);
@@ -626,13 +693,13 @@ const BigInt operator+(const BigInt& f) //independent, primitive
 const BigInt operator-(const BigInt& f) //independent, primitive
 {
 	BigInt result = f;
-	//result.nonNegative = !result.nonNegative;
+	//result.sign = !result.sign;
 	return result;
 }
 const BigInt& BigInt::operator=(const BigInt& i) //independent, primitive, tested 0<=i<=1000000
 {
 	this->size = i.size;
-	this->nonNegative = i.nonNegative;
+	this->sign = i.sign;
 	this->val = i.val;
 
 	return i;

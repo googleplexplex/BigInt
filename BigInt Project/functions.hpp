@@ -19,3 +19,26 @@ public:
 	notArithmeticTypeException() : exception("Not arithmetic type") {}
 	notArithmeticTypeException(string typeName) : exception((typeName + " is not arithmetic type").c_str()) {}
 };
+
+struct __warningHolderStruct
+{
+private:
+	string warning;
+	byte warningId = 0;
+
+public:
+	friend string getLastWarning();
+private:
+	void setWarning(string newWarning)
+	{
+		warning = newWarning;
+		warningId++;
+	}
+
+	friend class BigInt;
+} warningHolder;
+
+string getLastWarning()
+{
+	return warningHolder.warning;
+}
