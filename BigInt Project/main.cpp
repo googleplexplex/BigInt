@@ -1,10 +1,19 @@
 #include <iostream>
 #include <string>
 #include "BigInt.hpp"
+#include "BigUInt.hpp"
 using namespace std;
 
 int main()
 {
+	BigInt a(10);
+	string c = "";
+	try {
+		auto b = float(a);
+	} catch (exception ex) {
+		c = ex.what();
+	}
+
 	for (uint i = 15; i < UINT_MAX - 1; i++)
 	{
 		string trueStr = to_string(i);

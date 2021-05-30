@@ -1,46 +1,37 @@
 #pragma once
 #include <vector>
-#include "functions.hpp"
+#include <string>
+#include "BigInt.hpp"
 using namespace std;
 
-class BigInt;
-pair<BigInt, BigInt> __div(BigInt f, const BigInt& s);
-string to_string(BigInt& f);
-BigInt to_BigInt(string& value);
+class BigUInt;
+pair<BigUInt, BigUInt> __div(BigUInt f, const BigUInt& s);
+string to_string(BigUInt& f);
+BigUInt to_BigUInt(string& value);
 
-struct __warningHolderStruct;
-
-typedef enum intNegative : byte
-{
-	negative = BYTE_MIN,
-	positive = BYTE_MIN + 1
-};
-
-class BigInt
+class BigUInt
 {
 public:
 	uint size;
-	intNegative sign;
 	vector<byte> val;
 
 	//Конструкторы
 public:
-	BigInt()
+	BigUInt()
 	{
 		size = 1;
-		sign = positive;
 		val.push_back(BYTE_MIN);
 	}
 
-	BigInt(string value) //indev, tested 0<=value<=3000
+	BigUInt(string value) //indev, tested 0<=value<=3000
 	{
-		(*this) = to_BigInt(value);
+		(*this) = to_BigUInt(value);
 	}
-	
+
 	template <typename startValueType>
-	BigInt(startValueType value = 0)
+	BigUInt(startValueType value = 0)
 	{
-		if constexpr (!is_arithmetic<startValueType>::value)
+		if constexpr (!is_arithmetic<startValueType>::value && is_same<startValueType, BigUInt>::value)
 			throw notArithmeticTypeException("startValueType");
 
 		for (int i = sizeof(value) - 1; true; i--)
@@ -49,8 +40,6 @@ public:
 			{
 				this->size = i + 1;
 				val.assign(this->size, 0);
-				bool valueSign = (value >= int(0));
-				sign = (valueSign) ? (positive) : (negative);
 				startValueType valueModule = Abs(value);
 				memcpy(&(val[0]), &valueModule, this->size);
 				break;
@@ -58,15 +47,17 @@ public:
 		}
 	}
 
-	BigInt(vector<byte>& value, intNegative sign = positive) //totest
+	BigUInt(vector<byte>& value) //totest
 	{
 		size = value.size();
-		this->sign = sign;
 		val = value;
 	}
 
-	BigInt(BigUInt& value)
+	BigUInt(BigInt& value)
 	{
+		if (value.sign == negative)
+			warningHolder.setWarning("Converted negative BigInt to BigUInt");
+
 		size = value.size;
 		val = value.val;
 	}
@@ -77,16 +68,11 @@ public:
 	{
 		return size;
 	}
-	intNegative getSign()
-	{
-		return sign;
-	}
 	vector<byte> getByteArray()
 	{
 		return val;
 	}
-//private:
-public:
+private:
 	void addByte()
 	{
 		size++;
@@ -135,43 +121,44 @@ public:
 
 	//Внутриклассовые операторы
 public:
-	friend BigInt operator++(BigInt& i);
-	friend BigInt operator--(BigInt& i);
-	friend BigInt operator++(BigInt& i, int);
-	friend BigInt operator--(BigInt& i, int);
-	friend BigInt operator+(const BigInt& f, const BigInt& s);
-	friend BigInt operator-(const BigInt& f, const BigInt& s);
-	friend BigInt operator*(const BigInt& f, const BigInt& s);
-	friend BigInt operator/(const BigInt& f, const BigInt& s);
-	friend BigInt operator%(const BigInt& f, const BigInt& s);
-	friend BigInt operator+=(BigInt& f, const BigInt& s);
-	friend BigInt operator-=(BigInt& f, const BigInt& s);
-	friend BigInt operator*=(BigInt& f, const BigInt& s);
-	friend BigInt operator/=(BigInt& f, const BigInt& s);
-	friend BigInt operator%=(BigInt& f, const BigInt& s);
+	friend BigUInt operator++(BigUInt& i);
+	friend BigUInt operator--(BigUInt& i);
+	friend BigUInt operator++(BigUInt& i, int);
+	friend BigUInt operator--(BigUInt& i, int);
+	friend BigUInt operator+(const BigUInt& f, const BigUInt& s);
+	friend BigInt operator-(const BigUInt& f, const BigUInt& s);
+	friend BigUInt operator*(const BigUInt& f, const BigUInt& s);
+	friend BigUInt operator/(const BigUInt& f, const BigUInt& s);
+	friend BigUInt operator%(const BigUInt& f, const BigUInt& s);
+	friend BigUInt operator+=(BigUInt& f, const BigUInt& s);
+	friend BigUInt operator-=(BigUInt& f, const BigUInt& s);
+	friend BigUInt operator*=(BigUInt& f, const BigUInt& s);
+	friend BigUInt operator/=(BigUInt& f, const BigUInt& s);
+	friend BigUInt operator%=(BigUInt& f, const BigUInt& s);
 	//Битовые			v&x v<<x v>>x v^x v|x
-	friend BigInt operator&(const BigInt& i, const BigInt& j);
-	friend BigInt operator^(const BigInt& i, const BigInt& j);
-	friend BigInt operator|(const BigInt& i, const BigInt& j);
-	friend BigInt operator>>(BigInt& f, int s);
-	friend BigInt operator<<(BigInt& f, int s);
+	friend BigUInt operator&(const BigUInt& i, const BigUInt& j);
+	friend BigUInt operator^(const BigUInt& i, const BigUInt& j);
+	friend BigUInt operator|(const BigUInt& i, const BigUInt& j);
+	friend BigUInt operator>>(BigUInt& f, int s);
+	friend BigUInt operator<<(BigUInt& f, int s);
 	//Логические		v<x v>x v==x v!=x  (op=)
-	friend bool operator<(const BigInt& f, const BigInt& s);
-	friend bool operator>(const BigInt& f, const BigInt& s);
-	friend bool operator<=(const BigInt& f, const BigInt& s);
-	friend bool operator>=(const BigInt& f, const BigInt& s);
-	friend bool operator==(const BigInt& f, const BigInt& s);
-	friend bool operator!=(const BigInt& f, const BigInt& s);
+	friend bool operator<(const BigUInt& f, const BigUInt& s);
+	friend bool operator>(const BigUInt& f, const BigUInt& s);
+	friend bool operator<=(const BigUInt& f, const BigUInt& s);
+	friend bool operator>=(const BigUInt& f, const BigUInt& s);
+	friend bool operator==(const BigUInt& f, const BigUInt& s);
+	friend bool operator!=(const BigUInt& f, const BigUInt& s);
 	//(Остальное)		+v -v v=x v[x](разряд x)  x<<v x>>v
-	friend const BigInt operator+(const BigInt& i);
-	friend const BigInt operator-(const BigInt& i);
-	const BigInt& operator=(const BigInt& i);
+	friend const BigUInt operator+(const BigUInt& i);
+	friend const BigInt operator-(const BigUInt& i);
+	const BigUInt& operator=(const BigUInt& i);
+	const BigUInt& operator=(const BigInt& i);
 	byte operator[](const unsigned int index);
-	friend ostream& operator<<(ostream& out, BigInt& point);
-	friend istream& operator>>(istream& in, BigInt& point);
+	friend ostream& operator<<(ostream& out, BigUInt& point);
+	friend istream& operator>>(istream& in, BigUInt& point);
 
 	//Операторы преобразования
-	operator char*() //primitive, totest
+	operator char* () //primitive, totest
 	{
 		char* result = new char[size];
 		string resultStr = to_string(*this);
@@ -183,39 +170,37 @@ public:
 	template <typename T>
 	operator T() //totest
 	{
-		if(!is_arithmetic<T>::value)
+		if (!is_arithmetic<T>::value)
 			throw typeException(typeid(T).name(), "arithmetic");
 
 		if (is_floating_point<T>::value)
 		{
 			long long llval = static_cast<long long>(*this);
 			T fval = static_cast<T>(llval);
-			if(static_cast<long long>(fval) != llval)
-				warningHolder.setWarning(string() + "Converted BigInt bigger than " + typeid(T).name() + " type");
+			if (static_cast<long long>(fval) != llval)
+				warningHolder.setWarning(string() + "Converted BigUInt bigger than " + typeid(T).name() + " type");
 
 			return fval;
 		}
 
 		if (size > sizeof(T))
-			warningHolder.setWarning(string() + "Converted BigInt bigger than " + typeid(T).name() + " type");
-		if (is_unsigned<T>::value && sign == negative)
-			warningHolder.setWarning("Convert signed type to unsigned");
+			warningHolder.setWarning(string() + "Converted BigUInt bigger than " + typeid(T).name() + " type");
+		if (is_signed<T>::value)
+			warningHolder.setWarning("Convert unsigned type to signed");
 
 		T result = 0;
 		memcpy(&result, ((void*)(&val)), size);
-		if (sign == negative && is_signed<T>::value)
-			result *= -1;
 		return result;
 	}
 };
-string to_string(BigInt& f) //tested 0<=f<=3000
+string to_string(BigUInt& f) //tested 0<=f<=3000
 {
 	string result = "";
-	BigInt workAt = f;
+	BigUInt workAt = f;
 
-	while (workAt != BigInt(0))
+	while (workAt != BigUInt(0))
 	{
-		auto divResult = __div(workAt, 10);
+		pair<BigUInt, BigUInt> divResult = __div(workAt, BigUInt(10));
 		result.push_back(char(divResult.first));
 		workAt = divResult.second;
 	}
@@ -226,12 +211,12 @@ string to_string(BigInt& f) //tested 0<=f<=3000
 
 	return result;
 }
-BigInt to_BigInt(string& value) //tested 0<=f<=3000
+BigUInt to_BigUInt(string& value) //tested 0<=f<=3000
 {
-	BigInt result;
+	BigUInt result;
 
 	if (value[0] == NULL)
-		return BigInt(0);
+		return BigUInt(0);
 	if (value[0] == '-') //totest!!
 	{
 		result = -result;
@@ -240,22 +225,18 @@ BigInt to_BigInt(string& value) //tested 0<=f<=3000
 
 	for (int i = 0; i < value.size(); i++)
 	{
-		BigInt digitNum = BigInt(value[i] - '0');
-		BigInt powerOfTen = Pow(BigInt(10), BigInt(value.size() - i - 1));
+		BigUInt digitNum = BigUInt(value[i] - '0');
+		BigUInt powerOfTen = Pow(BigUInt(10), BigUInt(value.size() - i - 1));
 		result += digitNum * powerOfTen;
 	}
 
 	return result;
 }
-char to_char(BigInt& value)
+char to_char(BigUInt& value)
 {
-	if (value.getSign() == negative)
+	if (value > BigUInt(9))
 	{
-		warningHolder.setWarning("Convert signed negative type to charset");
-	}
-	if (value > BigInt(9))
-	{
-		warningHolder.setWarning("Converted BigInt has more than one digit");
+		warningHolder.setWarning("Converted BigUInt has more than one digit");
 	}
 
 	return '0' + value.getByteArray()[0];
@@ -263,46 +244,38 @@ char to_char(BigInt& value)
 
 //Операторы
 //Инк/декремент		++v --v v++ v--
-BigInt operator++(BigInt& i)
+BigUInt operator++(BigUInt& i)
 {
-	i = i + BigInt(1);
+	i = i + BigUInt(1);
 	return i;
 }
-BigInt operator--(BigInt& i)
+BigUInt operator--(BigUInt& i)
 {
-	i = i - BigInt(1);
+	i = i - BigUInt(1);
 	return i;
 }
-BigInt operator++(BigInt& i, int)
+BigUInt operator++(BigUInt& i, int)
 {
-	BigInt result = i;
-	i = i + BigInt(1);
+	BigUInt result = i;
+	i = i + BigUInt(1);
 	return result;
 }
-BigInt operator--(BigInt& i, int)
+BigUInt operator--(BigUInt& i, int)
 {
-	BigInt result = i;
-	i = i - BigInt(1);
+	BigUInt result = i;
+	i = i - BigUInt(1);
 	return result;
 }
 //Арифметика		+ - * / %  (op=)
-BigInt operator+(const BigInt& f, const BigInt& s) //totest
+BigUInt operator+(const BigUInt& f, const BigUInt& s) //totest
 {
-	//Валидируем аргументы
-	if (!f.sign && s.sign) //(-f) + s = s - (-(-f))
-		return s - (-f);
-	if (f.sign && !s.sign) //f + (-s) = f - (-(-s))
-		return f - (-s);
-	if (!f.sign && !s.sign) //(-f) + (-s) = -((-(-f)) + (-(-s)))
-		return -((-f) + (-s));
 	//f >= 0, s >= 0
-
-	BigInt result;
+	BigUInt result;
 	result.size = ((f >= s) ? (f.size) : (s.size)) + 1;
 	result.val.assign(result.size, 0);
 
-	const BigInt& biggerInt = (f >= s) ? (f) : (s);
-	const BigInt& smallerInt = (f >= s) ? (s) : (f);
+	const BigUInt& biggerInt = (f >= s) ? (f) : (s);
+	const BigUInt& smallerInt = (f >= s) ? (s) : (f);
 
 	bool addOne = false;
 	for (int i = 0; i < smallerInt.size; i++) //Складываем числа
@@ -353,22 +326,16 @@ BigInt operator+(const BigInt& f, const BigInt& s) //totest
 
 	return result;
 }
-BigInt operator-(const BigInt& f, const BigInt& s) //totest
+BigInt operator-(const BigUInt& f, const BigUInt& s) //totest
 {
 	//Валидируем аргументы
-	if (!f.sign && s.sign) //-f - s = -(f + s) = -(-(-f) + s)
-		return -(-f + s);
-	if (f.sign && !s.sign) //f - (-s) = f + s = f + -(-s)
-		return f + -s;
-	if (!f.sign && !s.sign) //-f - (-s) = -f + s = s - f = -(-s) - -(-f)
-		return -s - -f;
 	if (s > f) //f - s = -(s - f)  (Только если s > f)
 		return -(s - f);
 	//f >= 0, s >= 0, f >= s
 
 
-	const BigInt& biggerInt = (f >= s) ? (f) : (s);
-	const BigInt& smallerInt = (f >= s) ? (s) : (f);
+	const BigUInt& biggerInt = (f >= s) ? (f) : (s);
+	const BigUInt& smallerInt = (f >= s) ? (s) : (f);
 	BigInt result = biggerInt;
 
 	for (int i = smallerInt.size - 1; i >= 0; i--)
@@ -396,13 +363,13 @@ BigInt operator-(const BigInt& f, const BigInt& s) //totest
 
 	return result;
 }
-BigInt operator*(const BigInt& f, const BigInt& s) //totest
+BigUInt operator*(const BigUInt& f, const BigUInt& s) //totest
 {
 	if (f == 0 || s == 0) return 0;
 	if (f == 1) return s;
 	if (s == 1) return f;
 
-	BigInt result = 0;
+	BigUInt result = 0;
 	for (int i = 0; i < s; i++)
 	{
 		result += f;
@@ -410,29 +377,29 @@ BigInt operator*(const BigInt& f, const BigInt& s) //totest
 
 	return result;
 }
-BigInt operator+=(BigInt& f, const BigInt& s)
+BigUInt operator+=(BigUInt& f, const BigUInt& s)
 {
 	f = f + s;
 	return f;
 }
-BigInt operator-=(BigInt& f, const BigInt& s)
+BigUInt operator-=(BigUInt& f, const BigUInt& s)
 {
 	f = f - s;
 	return f;
 }
-BigInt operator*=(BigInt& f, const BigInt& s)
+BigUInt operator*=(BigUInt& f, const BigUInt& s)
 {
 	f = f * s;
 	return f;
 }
-pair<BigInt, BigInt> __div(BigInt f, const BigInt& s)
+pair<BigUInt, BigUInt> __div(BigUInt f, const BigUInt& s)
 {
-	if (f == BigInt(0))
-		return pair<BigInt, BigInt>(0, 0);
-	if (s == BigInt(0))
+	if (f == BigUInt(0))
+		return pair<BigUInt, BigUInt>(0, 0);
+	if (s == BigUInt(0))
 		throw exception("Division on zero");
 
-	BigInt result = 0;
+	BigUInt result = 0;
 	while (true)
 	{
 		if (f >= s)
@@ -446,30 +413,30 @@ pair<BigInt, BigInt> __div(BigInt f, const BigInt& s)
 
 	return make_pair(f, result); //%, /
 }
-BigInt operator/(const BigInt& f, const BigInt& s) //totest
+BigUInt operator/(const BigUInt& f, const BigUInt& s) //totest
 {
 	return __div(f, s).second;
 }
-BigInt operator%(const BigInt& f, const BigInt& s) //totest
+BigUInt operator%(const BigUInt& f, const BigUInt& s) //totest
 {
 	return __div(f, s).first;
 }
-BigInt operator/=(BigInt& f, const BigInt& s)
+BigUInt operator/=(BigUInt& f, const BigUInt& s)
 {
 	f = f / s;
 	return f;
 }
-BigInt operator%=(BigInt& f, const BigInt& s)
+BigUInt operator%=(BigUInt& f, const BigUInt& s)
 {
 	f = f % s;
 	return f;
 }
 //Битовые			v&x v<<x v>>x v^x v|x
-BigInt operator&(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
+BigUInt operator&(const BigUInt& f, const BigUInt& s) //tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
-	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result;
+	const BigUInt& biggestInt = (f > s) ? (f) : (s);
+	BigUInt result;
 	result.size = biggestInt.size;
 	result.val.assign(result.size, 0);
 
@@ -477,16 +444,16 @@ BigInt operator&(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
 	{
 		result.val[i] = f.val[i] & s.val[i];
 	}
-	if(biggestInt.size != minSize)
+	if (biggestInt.size != minSize)
 		memset(&(result.val[minSize]), 0, biggestInt.size - minSize); // v AND 0 = 0
 
 	return result;
 }
-BigInt operator^(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
+BigUInt operator^(const BigUInt& f, const BigUInt& s) //tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
-	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result;
+	const BigUInt& biggestInt = (f > s) ? (f) : (s);
+	BigUInt result;
 	result.size = biggestInt.size;
 	result.val.assign(result.size, 0);
 
@@ -501,11 +468,11 @@ BigInt operator^(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
 
 	return result;
 }
-BigInt operator|(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
+BigUInt operator|(const BigUInt& f, const BigUInt& s) //tested 0<=f<500 0<=s<500
 {
 	int minSize = (f > s) ? (s.size) : (f.size);
-	const BigInt& biggestInt = (f > s) ? (f) : (s);
-	BigInt result;
+	const BigUInt& biggestInt = (f > s) ? (f) : (s);
+	BigUInt result;
 	result.size = biggestInt.size;
 	result.val.assign(result.size, 0);
 
@@ -520,9 +487,9 @@ BigInt operator|(const BigInt& f, const BigInt& s) //tested 0<=f<500 0<=s<500
 
 	return result;
 }
-BigInt operator<<(BigInt& f, int s) //tested 0<=f<500 0<=s<=8
+BigUInt operator<<(BigUInt& f, int s) //tested 0<=f<500 0<=s<=8
 {
-	BigInt result;
+	BigUInt result;
 	result.size = f.size;
 	result.val.assign(result.size, 0);
 
@@ -547,9 +514,9 @@ BigInt operator<<(BigInt& f, int s) //tested 0<=f<500 0<=s<=8
 
 	return result;
 }
-BigInt operator>>(BigInt& f, int s) //tested 0<=f<500 0<=s<=8
+BigUInt operator>>(BigUInt& f, int s) //tested 0<=f<500 0<=s<=8
 {
-	BigInt result;
+	BigUInt result;
 	result.size = f.size;
 	result.val.assign(result.size, 0);
 
@@ -576,14 +543,8 @@ BigInt operator>>(BigInt& f, int s) //tested 0<=f<500 0<=s<=8
 	return result;
 }
 //Логические		v<x v>x v==x v!=x  (op=)
-bool operator<(const BigInt& f, const BigInt& s) //intested 0<=f<=1001 0<=s<=1001
+bool operator<(const BigUInt& f, const BigUInt& s) //intested 0<=f<=1001 0<=s<=1001
 {
-	//Валидируем аргументы
-	if (!f.sign && s.sign) //-f < s
-		return true;
-	if (f.sign && !s.sign) //f < -s
-		return false;
-
 	if (f.size < s.size)
 	{
 		for (int i = f.size; i < s.size; i++)
@@ -601,7 +562,7 @@ bool operator<(const BigInt& f, const BigInt& s) //intested 0<=f<=1001 0<=s<=100
 		}
 	}
 
-	const BigInt& smallerInt = (f.size >= s.size) ? (s) : (f);
+	const BigUInt& smallerInt = (f.size >= s.size) ? (s) : (f);
 
 	for (int i = smallerInt.size - 1; i >= 0; i--)
 	{
@@ -613,28 +574,22 @@ bool operator<(const BigInt& f, const BigInt& s) //intested 0<=f<=1001 0<=s<=100
 
 	return false;
 }
-bool operator>(const BigInt& f, const BigInt& s) //dependent
+bool operator>(const BigUInt& f, const BigUInt& s) //dependent
 {
 	return s < f;
 }
-bool operator<=(const BigInt& f, const BigInt& s) //dependent
+bool operator<=(const BigUInt& f, const BigUInt& s) //dependent
 {
 	return (f < s || f == s);
 }
-bool operator>=(const BigInt& f, const BigInt& s) //dependent
+bool operator>=(const BigUInt& f, const BigUInt& s) //dependent
 {
 	return (f > s || f == s);
 }
-bool operator==(const BigInt& f, const BigInt& s) //intested 0<=f<=1001 0<=s<=1001
+bool operator==(const BigUInt& f, const BigUInt& s) //intested 0<=f<=1001 0<=s<=1001
 {
-	//Валидируем аргументы
-	if (!f.sign && s.sign) //-f < s
-		return false;
-	if (f.sign && !s.sign) //f < -s
-		return false;
-
-	const BigInt& biggerInt = (f.size >= s.size) ? (f) : (s);
-	const BigInt& smallerInt = (f.size >= s.size) ? (s) : (f);
+	const BigUInt& biggerInt = (f.size >= s.size) ? (f) : (s);
+	const BigUInt& smallerInt = (f.size >= s.size) ? (s) : (f);
 
 	for (int i = smallerInt.size; i < biggerInt.size; i++)
 	{
@@ -650,46 +605,53 @@ bool operator==(const BigInt& f, const BigInt& s) //intested 0<=f<=1001 0<=s<=10
 
 	return true;
 }
-bool operator!=(const BigInt& f, const BigInt& s) //primitive
+bool operator!=(const BigUInt& f, const BigUInt& s) //primitive
 {
 	return !(f == s);
 }
 //(Остальное)		+v -v v=x v[x](разряд x) x<<v x>>v
-const BigInt operator+(const BigInt& f) //inprimitive
+const BigUInt operator+(const BigUInt& f) //inprimitive
 {
 	return f;
 }
-const BigInt operator-(const BigInt& f) //inprimitive
+const BigInt operator-(const BigUInt& f) //inprimitive
 {
 	BigInt result = f;
-	result.sign = (result.sign == positive) ? (negative) : (positive);
+	result.sign = negative;
 	return result;
 }
-const BigInt& BigInt::operator=(const BigInt& i) //inprimitive, tested 0<=i<=1000000
+const BigUInt& BigUInt::operator=(const BigUInt& i) //inprimitive, tested 0<=i<=1000000
 {
 	this->size = i.size;
-	this->sign = i.sign;
 	this->val = i.val;
-
 	return i;
 }
-byte BigInt::operator[](const unsigned int index)
+const BigUInt& BigUInt::operator=(const BigInt& i) //inprimitive, totest
+{
+	if(i.sign == negative)
+		warningHolder.setWarning("Converted negative BigInt to BigUInt");
+
+	this->size = i.size;
+	this->val = i.val;
+	return i;
+}
+byte BigUInt::operator[](const unsigned int index)
 {
 	if (index >= size)
 		throw exception("Segmentation fault");
 
 	return val[index];
 }
-ostream& operator<<(ostream& out, BigInt& f) //primitive, totest
+ostream& operator<<(ostream& out, BigUInt& f) //primitive, totest
 {
 	out << to_string(f);
 	return out;
 }
-istream& operator>>(istream& in, BigInt& f) //primitive, totest
+istream& operator>>(istream& in, BigUInt& f) //primitive, totest
 {
 	string input;
 	in >> input;
-	f = BigInt(input);
+	f = BigUInt(input);
 	return in;
 }
 //Неиспользованные	!v &v v&&x v||x v() (v,x) v->x
@@ -707,21 +669,20 @@ istream& operator>>(istream& in, BigInt& f) //primitive, totest
 
 
 
-
-
 template<typename T>
-constexpr bool is_BigInt(T)
+constexpr bool is_BigUInt(T)
 {
-	return (is_same<T, BigInt>::value);
+	return (is_same<T, BigUInt>::value);
 }
 
 template<typename T>
-constexpr bool is_arithmetic_or_BigInt(T)
+constexpr bool is_arithmetic_or_BigUInt(T)
 {
-	return (is_arithmetic<T>::value || is_same<T, BigInt>::value);
+	return (is_arithmetic<T>::value || is_same<T, BigUInt>::value);
 }
+
 template<typename T>
-constexpr bool is_signed_or_BigInt(T)
+constexpr bool is_unsigned_or_BigUInt(T)
 {
-	return (is_signed<T>::value || is_same<T, BigInt>::value);
+	return (is_unsigned<T>::value || is_same<T, BigUInt>::value);
 }

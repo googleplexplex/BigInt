@@ -13,12 +13,58 @@ using byte = unsigned char;
 #define BYTE_MAX ((byte)UCHAR_MAX)
 #define BYTE_MIN ((byte)0)
 
-class notArithmeticTypeException : public exception
+struct typeException : public exception
 {
 public:
-	notArithmeticTypeException() : exception("Not arithmetic type") {}
-	notArithmeticTypeException(string typeName) : exception((typeName + " is not arithmetic type").c_str()) {}
+	typeException() : exception("Wrong type") {}
+	typeException(string typeName) : exception((typeName + " is wrong type").c_str()) {}
+	typeException(string typeName, string waitedType) : exception((typeName + " is not waited " + waitedType +" type").c_str()) {}
 };
+
+struct notArithmeticTypeException : public typeException
+{
+public:
+	notArithmeticTypeException() : typeException("Argument type", "arithmetic") {}
+	notArithmeticTypeException(string typeName) : typeException(typeName, "arithmetic") {}
+};
+
+template<typename T>
+bool is_Arithmetic(T)
+{
+	return is_arithmetic<T>::value;
+}
+
+template<typename T>
+T Abs(T num)
+{
+	if (!is_Arithmetic(num))
+		throw notArithmeticTypeException("T");
+
+	if (is_unsigned<T>::value || num >= int(0))
+		return num;
+	else //T is signed && num < 0
+		return T(int(0) - num);
+}
+
+template<typename T>
+T Pow(const T& base, const T& exp) //totest
+{
+	if (!is_Arithmetic(base))
+		throw notArithmeticTypeException("T");
+
+	if (exp == 0) return 1;
+	if (exp == 1) return base;
+
+	T result = 1;
+
+	for (T i = 0; i < exp; i++)
+	{
+		result *= base;
+	}
+
+	return result;
+}
+
 
 struct __warningHolderStruct
 {
@@ -36,6 +82,9 @@ private:
 	}
 
 	friend class BigInt;
+	friend char to_char(BigInt& value);
+	friend class BigUInt;
+	friend char to_char(BigUInt& value);
 } warningHolder;
 
 string getLastWarning()
