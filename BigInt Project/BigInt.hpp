@@ -9,12 +9,6 @@ pair<BigInt, BigInt> __div(BigInt f, const BigInt& s);
 string to_string(BigInt& f);
 BigInt to_BigInt(string& value);
 
-typedef enum intNegative : byte
-{
-	negative = BYTE_MIN,
-	positive = BYTE_MIN + 1
-};
-
 class BigInt
 {
 public:
@@ -65,6 +59,7 @@ public:
 	}
 
 	BigInt(BigUInt& value);
+	//BigInt(BigFloat& value);
 
 	//Ìועמהû
 public:

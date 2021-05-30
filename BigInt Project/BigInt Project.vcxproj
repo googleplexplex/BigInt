@@ -142,6 +142,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BigFloat.hpp" />
     <ClInclude Include="BigInt.hpp" />
     <ClInclude Include="BigUInt.hpp" />
     <ClInclude Include="connector.hpp" />

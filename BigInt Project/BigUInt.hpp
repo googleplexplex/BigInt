@@ -54,6 +54,7 @@ public:
 	}
 
 	BigUInt(BigInt& value);
+	//BigUInt(BigFloat& value);
 
 	//Ìועמהû
 public:

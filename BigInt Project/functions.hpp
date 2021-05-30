@@ -91,3 +91,10 @@ string getLastWarning()
 {
 	return warningHolder.warning;
 }
+
+
+typedef enum intNegative : byte
+{
+	negative = BYTE_MIN,
+	positive = BYTE_MIN + 1
+};
