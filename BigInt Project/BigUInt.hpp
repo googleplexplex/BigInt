@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "BigInt.hpp"
+#include "functions.hpp"
 using namespace std;
 
 class BigUInt;
@@ -53,14 +53,7 @@ public:
 		val = value;
 	}
 
-	BigUInt(BigInt& value)
-	{
-		if (value.sign == negative)
-			warningHolder.setWarning("Converted negative BigInt to BigUInt");
-
-		size = value.size;
-		val = value.val;
-	}
+	BigUInt(BigInt& value);
 
 	//Ìועמהû
 public:
@@ -131,7 +124,7 @@ public:
 	friend BigUInt operator/(const BigUInt& f, const BigUInt& s);
 	friend BigUInt operator%(const BigUInt& f, const BigUInt& s);
 	friend BigUInt operator+=(BigUInt& f, const BigUInt& s);
-	friend BigUInt operator-=(BigUInt& f, const BigUInt& s);
+	friend BigInt operator-=(BigUInt& f, const BigUInt& s);
 	friend BigUInt operator*=(BigUInt& f, const BigUInt& s);
 	friend BigUInt operator/=(BigUInt& f, const BigUInt& s);
 	friend BigUInt operator%=(BigUInt& f, const BigUInt& s);
@@ -193,6 +186,7 @@ public:
 		return result;
 	}
 };
+
 string to_string(BigUInt& f) //tested 0<=f<=3000
 {
 	string result = "";
@@ -211,6 +205,7 @@ string to_string(BigUInt& f) //tested 0<=f<=3000
 
 	return result;
 }
+
 BigUInt to_BigUInt(string& value) //tested 0<=f<=3000
 {
 	BigUInt result;
@@ -232,6 +227,7 @@ BigUInt to_BigUInt(string& value) //tested 0<=f<=3000
 
 	return result;
 }
+
 char to_char(BigUInt& value)
 {
 	if (value > BigUInt(9))
@@ -251,7 +247,13 @@ BigUInt operator++(BigUInt& i)
 }
 BigUInt operator--(BigUInt& i)
 {
-	i = i - BigUInt(1);
+	if (i == BigUInt(0))
+	{
+		warningHolder.setWarning("Decremented BigUInt equal 0");
+		return i;
+	}
+
+	i = BigUInt(i - BigUInt(1));
 	return i;
 }
 BigUInt operator++(BigUInt& i, int)
@@ -263,7 +265,14 @@ BigUInt operator++(BigUInt& i, int)
 BigUInt operator--(BigUInt& i, int)
 {
 	BigUInt result = i;
-	i = i - BigUInt(1);
+
+	if (i == BigUInt(0))
+	{
+		warningHolder.setWarning("Decremented BigUInt equal 0");
+		return result;
+	}
+
+	i = BigUInt(i - BigUInt(1));
 	return result;
 }
 //Àנטפלועטךא		+ - * / %  (op=)
@@ -382,7 +391,7 @@ BigUInt operator+=(BigUInt& f, const BigUInt& s)
 	f = f + s;
 	return f;
 }
-BigUInt operator-=(BigUInt& f, const BigUInt& s)
+BigInt operator-=(BigUInt& f, const BigUInt& s)
 {
 	f = f - s;
 	return f;

@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "functions.hpp"
 using namespace std;
 
@@ -7,8 +8,6 @@ class BigInt;
 pair<BigInt, BigInt> __div(BigInt f, const BigInt& s);
 string to_string(BigInt& f);
 BigInt to_BigInt(string& value);
-
-struct __warningHolderStruct;
 
 typedef enum intNegative : byte
 {
@@ -65,11 +64,7 @@ public:
 		val = value;
 	}
 
-	BigInt(BigUInt& value)
-	{
-		size = value.size;
-		val = value.val;
-	}
+	BigInt(BigUInt& value);
 
 	//Ìועמהû
 public:

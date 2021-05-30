@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="BigInt.hpp" />
     <ClInclude Include="BigUInt.hpp" />
+    <ClInclude Include="connector.hpp" />
     <ClInclude Include="functions.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

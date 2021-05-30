@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
-#include "BigInt.hpp"
-#include "BigUInt.hpp"
+#include "connector.hpp"
 using namespace std;
 
 int main()

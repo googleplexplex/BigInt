@@ -74,7 +74,7 @@ private:
 
 public:
 	friend string getLastWarning();
-private:
+//private:
 	void setWarning(string newWarning)
 	{
 		warning = newWarning;
