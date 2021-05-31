@@ -54,7 +54,6 @@ public:
 	}
 
 	BigUInt(BigInt& value);
-	//BigUInt(BigFloat& value);
 
 	//Ìועמהû
 public:
@@ -66,7 +65,8 @@ public:
 	{
 		return val;
 	}
-private:
+//private:
+public:
 	void addByte()
 	{
 		size++;

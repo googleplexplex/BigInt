@@ -11,15 +11,19 @@ BigInt::BigInt(BigUInt& value)
 	this->val = value.getByteArray();
 }
 
-//BigInt::BigInt(BigFloat& value)
-//{
-//	if(value.fract != BigUInt(0))
-//		warningHolder.setWarning("Converted BigFloat with not empty fractial to BigInt");
-//
-//	size = value.whole.getSize();
-//	sign = value.getSign();
-//	val = value.whole.getByteArray();
-//}
+BigInt to_BigFloat(BigFloat& value)
+{
+	BigInt result;
+
+	if (value.fract != BigUInt(0))
+				warningHolder.setWarning("Converted BigFloat with not empty fractial to BigInt");
+		
+	result.size = value.whole.getSize();
+	result.sign = value.getSign();
+	result.val = value.whole.getByteArray();
+
+	return result;
+}
 
 
 BigUInt::BigUInt(BigInt& value)
@@ -31,16 +35,20 @@ BigUInt::BigUInt(BigInt& value)
 	this->val = value.val;
 }
 
-//BigUInt::BigUInt(BigFloat& value)
-//{
-//	if (value.fract != BigUInt(0))
-//		warningHolder.setWarning("Converted BigFloat with not empty fractial to BigUInt");
-//	if (value.getSign() == negative)
-//		warningHolder.setWarning("Converted negative BigInt to BigUInt");
-//
-//	this->size = value.whole.getSize();
-//	this->val = value.whole.getByteArray();
-//}
+BigUInt to_BigUInt(BigFloat& value)
+{
+	BigUInt result;
+
+	if (value.fract != BigUInt(0))
+		warningHolder.setWarning("Converted BigFloat with not empty fractial to BigUInt");
+	if (value.getSign() == negative)
+		warningHolder.setWarning("Converted negative BigInt to BigUInt");
+
+	result.size = value.whole.getSize();
+	result.val = value.whole.getByteArray();
+
+	return result;
+}
 
 
 BigFloat::BigFloat(BigInt& value)
